@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sort-a-Suffix</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { width: 100%; height: 100%; overflow: hidden; user-select: none; }
+
+body {
+  font-family: 'Segoe UI', system-ui, sans-serif;
+  background: linear-gradient(180deg, #050E05 0%, #0A1A0A 25%, #0D2410 55%, #1B3A1B 100%);
+  color: #F4E4B8;
+}
+
+.screen {
+  position: fixed; inset: 0;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 1.4rem; padding: 2rem; z-index: 10;
+}
+.hidden { display: none !important; }
+
+.btn {
+  background: linear-gradient(135deg, #B8731A, #C8832A);
+  color: #F4E4B8; border: none;
+  padding: 0.8rem 2.2rem; border-radius: 10px;
+  font-size: 1.05rem; font-weight: 700; cursor: pointer;
+  letter-spacing: 0.06em;
+  transition: filter 0.15s, transform 0.1s;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.5);
+}
+.btn:hover { filter: brightness(1.15); transform: translateY(-2px); }
+.btn:active { transform: translateY(0); filter: brightness(0.95); }
+.btn-outline {
+  background: transparent; border: 2px solid #4A7C1F; color: #A8C880;
+}
+.btn-outline:hover { background: rgba(74,124,31,0.25); filter: none; }
+
+/* INTRO */
+#screen-intro {
+  background: radial-gradient(ellipse at 50% 40%, rgba(74,124,31,0.12) 0%, transparent 65%);
+  text-align: center; gap: 1rem;
+}
+.intro-icon { font-size: 3.8rem; line-height: 1; filter: drop-shadow(0 0 18px rgba(74,124,31,0.9)); }
+.intro-title {
+  font-size: clamp(2.6rem, 6vw, 4rem); font-weight: 900; color: #F4E4B8;
+  line-height: 1; text-shadow: 0 0 40px rgba(200,131,42,0.5), 0 4px 12px rgba(0,0,0,0.9);
+}
+.intro-tagline { font-size: 1.05rem; color: #8AAD6A; margin-top: 0.2rem; }
+.intro-deco {
+  width: 120px; height: 2px;
+  background: linear-gradient(90deg, transparent, #4A7C1F, transparent);
+  margin: 0.2rem auto;
+}
+
+/* HOW TO PLAY */
+#screen-howtoplay {
+  max-width: 520px; width: 100%;
+  align-items: center; text-align: center;
+}
+.htp-title {
+  font-size: 1.8rem; font-weight: 800; color: #C8832A;
+  text-align: center; letter-spacing: 0.02em;
+}
+.steps { list-style: none; width: 100%; display: flex; flex-direction: column; gap: 0.7rem; }
+.steps li {
+  display: flex; align-items: flex-start; gap: 0.9rem;
+  background: rgba(13,36,16,0.7); border: 1px solid rgba(74,124,31,0.35);
+  border-radius: 10px; padding: 0.75rem 1rem; text-align: left;
+}
+.step-n {
+  background: #C8832A; color: #F4E4B8;
+  width: 26px; height: 26px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 800; font-size: 0.85rem; flex-shrink: 0;
+}
+.step-t { font-size: 0.92rem; line-height: 1.6; color: #E0D0A0; }
+.step-t strong { color: #F4E4B8; }
+.step-t em { color: #A8D878; font-style: normal; font-weight: 700; }
+.step-t .pos { color: #90EE90; font-weight: 700; }
+.step-t .neg { color: #FF8A80; font-weight: 700; }
+
+/* DIFFICULTY SELECT */
+#screen-difficulty { text-align: center; }
+.diff-title { font-size: 1.9rem; font-weight: 800; color: #C8832A; }
+.diff-sub { font-size: 0.95rem; color: #8AAD6A; margin-top: -0.4rem; }
+.diff-grid {
+  display: flex; gap: 1.2rem;
+  margin-top: 0.4rem; flex-wrap: wrap; justify-content: center;
+}
+.d-btn {
+  background: rgba(13,36,16,0.8); border: 2px solid #2D5A1B; color: #F4E4B8;
+  padding: 1.4rem 2rem; border-radius: 14px;
+  cursor: pointer; min-width: 130px;
+  display: flex; flex-direction: column; align-items: center; gap: 0.4rem;
+  transition: border-color 0.15s, background 0.15s, transform 0.1s, box-shadow 0.15s;
+}
+.d-btn:hover {
+  border-color: #C8832A; background: rgba(74,124,31,0.3);
+  transform: translateY(-3px); box-shadow: 0 6px 16px rgba(200,131,42,0.25);
+}
+.d-icon { font-size: 2rem; }
+.d-label { font-size: 1.2rem; font-weight: 800; }
+.d-hint { font-size: 0.7rem; color: #6B9E3F; letter-spacing: 0.04em; }
+
+/* GAME SCREEN */
+#screen-game { padding: 0; justify-content: flex-start; z-index: 1; background: none; }
+
+.g-header {
+  width: 100%; display: flex; align-items: center; justify-content: space-between;
+  padding: 0.65rem 1.4rem; background: rgba(0,0,0,0.6);
+  border-bottom: 1px solid rgba(74,124,31,0.3);
+  position: relative; z-index: 20; flex-shrink: 0;
+}
+.g-score { font-size: 1.25rem; font-weight: 800; color: #C8832A; }
+.g-score span { color: #F4E4B8; }
+.g-round { font-size: 0.95rem; color: #A8C880; font-weight: 600; }
+.g-difficulty { font-size: 0.85rem; color: #6B9E3F; }
+
+#game-area { flex: 1; width: 100%; position: relative; overflow: hidden; }
+
+#inst-banner {
+  position: absolute; top: 12px; left: 50%; transform: translateX(-50%);
+  background: rgba(0,0,0,0.55); border: 1px solid rgba(74,124,31,0.4);
+  border-radius: 20px; padding: 0.35rem 1.1rem;
+  font-size: 0.82rem; color: #A8C880; white-space: nowrap;
+  z-index: 10; pointer-events: none; transition: opacity 0.3s;
+}
+
+.forest-floor { position: absolute; bottom: 0; left: 0; right: 0; pointer-events: none; z-index: 2; }
+
+.word-card {
+  position: absolute;
+  background: linear-gradient(140deg, #3A6618, #4A7C1F 60%, #3D6815);
+  border: 2px solid #6BAA3A; color: #F4E4B8;
+  padding: 0.45rem 1rem; border-radius: 44% 12% 44% 12%;
+  font-size: 1rem; font-weight: 700; cursor: pointer; white-space: nowrap;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.7);
+  box-shadow: 0 3px 10px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.08);
+  transition: border-color 0.12s, box-shadow 0.12s;
+  z-index: 5; will-change: transform, top, left;
+}
+.word-card:hover { border-color: #C8832A; }
+.word-card.selected {
+  border-color: #FFD700;
+  box-shadow: 0 0 0 3px rgba(255,215,0,0.35), 0 4px 16px rgba(255,215,0,0.4), 0 3px 10px rgba(0,0,0,0.5);
+  background: linear-gradient(140deg, #4A7C1F, #5A9020 60%, #487018);
+  z-index: 15;
+}
+
+.score-pop {
+  position: absolute; font-size: 1.15rem; font-weight: 800;
+  pointer-events: none; z-index: 100;
+  animation: popFloat 1s ease forwards;
+  text-shadow: 0 2px 6px rgba(0,0,0,0.8);
+}
+.score-pop.pos { color: #90EE90; }
+.score-pop.neg { color: #FF8A80; }
+@keyframes popFloat {
+  0%   { opacity: 1; transform: translateY(0) scale(1); }
+  20%  { transform: translateY(-8px) scale(1.15); }
+  100% { opacity: 0; transform: translateY(-44px) scale(0.9); }
+}
+
+/* BUCKETS */
+.buckets-row {
+  width: 100%; display: flex;
+  background: rgba(0,0,0,0.7); border-top: 2px solid rgba(107,58,42,0.5);
+  position: relative; z-index: 20; flex-shrink: 0; height: 150px;
+}
+.bucket {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  cursor: pointer; gap: 0.4rem; padding: 0.7rem;
+  border-right: 1px solid rgba(107,58,42,0.35);
+  transition: background 0.15s; position: relative; overflow: hidden;
+}
+.bucket:last-child { border-right: none; }
+.bucket::after {
+  content: ''; position: absolute; inset: 0;
+  background: rgba(200,131,42,0.12); opacity: 0; transition: opacity 0.15s;
+}
+.bucket.lit::after { opacity: 1; }
+.bucket-barrel {
+  width: 66px; height: 52px;
+  background: linear-gradient(180deg, #9B6E4C 0%, #6B3A2A 45%, #512A1A 100%);
+  border-radius: 6px 6px 10px 10px; border: 2px solid #A87840;
+  position: relative;
+  box-shadow: inset 4px 0 8px rgba(0,0,0,0.35), inset -4px 0 8px rgba(0,0,0,0.35);
+}
+.bucket-barrel::before {
+  content: ''; position: absolute;
+  top: 28%; left: -5px; right: -5px; height: 7px;
+  background: linear-gradient(180deg, #D4942E, #B8731A);
+  border-radius: 3px; box-shadow: 0 1px 3px rgba(0,0,0,0.5);
+}
+.bucket-barrel::after {
+  content: ''; position: absolute;
+  top: 0; left: 50%; transform: translateX(-50%);
+  width: 85%; height: 9px;
+  background: rgba(255,255,255,0.12); border-radius: 3px;
+}
+.bucket-label {
+  font-size: 1.25rem; font-weight: 900; color: #D4942E;
+  text-shadow: 0 2px 6px rgba(0,0,0,0.9); letter-spacing: 0.04em;
+}
+.bucket-hint {
+  font-size: 0.7rem; color: #6B9E3F;
+  text-align: center; line-height: 1.3; min-height: 2em; transition: color 0.2s;
+}
+
+@keyframes glowGreen {
+  0%, 100% { box-shadow: none; }
+  40%       { box-shadow: inset 0 0 0 2000px rgba(80,200,80,0.18), 0 0 30px rgba(80,200,80,0.3); }
+}
+@keyframes glowRed {
+  0%, 100% { box-shadow: none; }
+  40%       { box-shadow: inset 0 0 0 2000px rgba(200,60,60,0.18), 0 0 30px rgba(200,60,60,0.3); }
+}
+@keyframes glowGold {
+  0%, 100% { box-shadow: none; }
+  40%       { box-shadow: inset 0 0 0 2000px rgba(255,215,0,0.15), 0 0 30px rgba(255,215,0,0.25); }
+}
+.bucket.flash-correct { animation: glowGreen 0.65s ease; }
+.bucket.flash-wrong   { animation: glowRed 0.65s ease; }
+.bucket.flash-hint    { animation: glowGold 1.1s ease; }
+
+/* GAME OVER */
+#screen-gameover { text-align: center; }
+.go-icon { font-size: 3.5rem; filter: drop-shadow(0 0 18px rgba(200,131,42,0.6)); }
+.go-title { font-size: 2.8rem; font-weight: 900; color: #C8832A; text-shadow: 0 0 40px rgba(200,131,42,0.4); }
+.go-score-lbl { font-size: 1rem; color: #8AAD6A; margin-bottom: -0.8rem; }
+.go-score { font-size: 3.5rem; font-weight: 900; color: #FFD700; text-shadow: 0 0 30px rgba(255,215,0,0.5); line-height: 1; }
+.go-acc { font-size: 0.95rem; color: #A8C880; }
+.go-msg { font-size: 1rem; color: #E0D0A0; max-width: 340px; line-height: 1.55; }
+.go-btns { display: flex; gap: 0.9rem; flex-wrap: wrap; justify-content: center; }
+
+/* FIREFLIES */
+.fly {
+  position: fixed; width: 3px; height: 3px; background: #FFE878;
+  border-radius: 50%; pointer-events: none;
+  animation: flyFloat var(--dur) ease-in-out var(--del) infinite;
+  box-shadow: 0 0 4px 2px rgba(255,232,120,0.6);
+}
+@keyframes flyFloat {
+  0%   { opacity: 0; transform: translate(0,0); }
+  15%  { opacity: 0.85; }
+  85%  { opacity: 0.6; }
+  100% { opacity: 0; transform: translate(var(--dx), var(--dy)); }
+}
+</style>
+</head>
+<body>
+
+<!-- INTRO -->
+<div id="screen-intro" class="screen">
+  <div class="intro-icon">🍃</div>
+  <h1 class="intro-title">Sort-a-Suffix</h1>
+  <div class="intro-deco"></div>
+  <p class="intro-tagline">Words fall like leaves — add the suffix and sort them!</p>
+  <button class="btn" onclick="show('howtoplay')">Play</button>
+</div>
+
+<!-- HOW TO PLAY -->
+<div id="screen-howtoplay" class="screen hidden">
+  <h2 class="htp-title">How to Play</h2>
+  <ol class="steps">
+    <li>
+      <div class="step-n">1</div>
+      <div class="step-t">Words drift down on falling leaves. Each word is a <strong>base word</strong> — your job is to figure out which suffix turns it into a real word!</div>
+    </li>
+    <li>
+      <div class="step-n">2</div>
+      <div class="step-t">Three barrels sit at the bottom, each labelled with a suffix: <strong>-ful</strong>, <strong>-ous</strong>, or <strong>-ish</strong>.</div>
+    </li>
+    <li>
+      <div class="step-n">3</div>
+      <div class="step-t"><strong>Click a leaf</strong> to select it — it glows gold and pauses mid-air. Then <strong>click the right barrel</strong> to sort it!</div>
+    </li>
+    <li>
+      <div class="step-n">4</div>
+      <div class="step-t">For example: <strong>"wonder"</strong> + <strong>-ful</strong> = <em>wonderful</em> ✓ &nbsp;|&nbsp; <strong>"child"</strong> + <strong>-ish</strong> = <em>childish</em> ✓</div>
+    </li>
+    <li>
+      <div class="step-n">5</div>
+      <div class="step-t">Correct sort = <span class="pos">+10 pts</span>. Wrong barrel or word hits the ground = <span class="neg">−5 pts</span>. Good luck!</div>
+    </li>
+  </ol>
+  <button class="btn" onclick="show('difficulty')">Got it!</button>
+</div>
+
+<!-- DIFFICULTY SELECT -->
+<div id="screen-difficulty" class="screen hidden">
+  <h2 class="diff-title">Choose Difficulty</h2>
+  <p class="diff-sub">Pick your challenge level</p>
+  <div class="diff-grid">
+    <button class="d-btn" onclick="startGame('easy')">
+      <span class="d-icon">🌱</span>
+      <span class="d-label">Easy</span>
+      <span class="d-hint">Common words</span>
+    </button>
+    <button class="d-btn" onclick="startGame('medium')">
+      <span class="d-icon">🌿</span>
+      <span class="d-label">Medium</span>
+      <span class="d-hint">Trickier words</span>
+    </button>
+    <button class="d-btn" onclick="startGame('hard')">
+      <span class="d-icon">🍃</span>
+      <span class="d-label">Hard</span>
+      <span class="d-hint">Challenge mode</span>
+    </button>
+  </div>
+</div>
+
+<!-- GAME -->
+<div id="screen-game" class="screen hidden">
+  <div class="g-header">
+    <div class="g-score">Score: <span id="score-val">0</span></div>
+    <div class="g-round" id="round-lbl">Round 1</div>
+    <div class="g-difficulty" id="difficulty-lbl">Easy</div>
+  </div>
+  <div id="game-area">
+    <div id="inst-banner">Click a leaf to select, then click a barrel to sort</div>
+    <svg class="forest-floor" viewBox="0 0 1440 110" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+      <polygon points="0,110 55,18 110,110"    fill="#050E05"/>
+      <polygon points="90,110 155,2 220,110"   fill="#071007"/>
+      <polygon points="185,110 248,28 310,110"  fill="#060F06"/>
+      <polygon points="278,110 345,8 412,110"   fill="#050E05"/>
+      <polygon points="375,110 435,32 495,110"  fill="#071007"/>
+      <polygon points="465,110 530,5 595,110"   fill="#060F06"/>
+      <polygon points="558,110 622,22 686,110"  fill="#050E05"/>
+      <polygon points="650,110 718,2 786,110"   fill="#071007"/>
+      <polygon points="748,110 810,30 872,110"  fill="#060F06"/>
+      <polygon points="840,110 905,10 970,110"  fill="#050E05"/>
+      <polygon points="935,110 998,25 1061,110" fill="#071007"/>
+      <polygon points="1025,110 1092,5 1159,110" fill="#060F06"/>
+      <polygon points="1120,110 1182,20 1244,110" fill="#050E05"/>
+      <polygon points="1205,110 1270,8 1335,110"  fill="#071007"/>
+      <polygon points="1295,110 1368,30 1440,110" fill="#060F06"/>
+      <rect x="0" y="90" width="1440" height="20" fill="#050E05"/>
+    </svg>
+  </div>
+  <div class="buckets-row" id="buckets-row"></div>
+</div>
+
+<!-- GAME OVER -->
+<div id="screen-gameover" class="screen hidden">
+  <div class="go-icon">🍂</div>
+  <h2 class="go-title">Well Done!</h2>
+  <div class="go-score-lbl">Final Score</div>
+  <div class="go-score" id="go-score">0</div>
+  <div class="go-acc" id="go-acc"></div>
+  <div class="go-msg" id="go-msg"></div>
+  <div class="go-btns">
+    <button class="btn btn-outline" onclick="show('difficulty')">Change Difficulty</button>
+    <button class="btn" onclick="restartGame()">Play Again</button>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   WORD BANK — base words only, no suffix attached.
+   Each word has exactly one valid match among -ful, -ous, -ish.
+============================================================ */
+const WORD_BANK = {
+  '-ful': {
+    easy:   ['harm', 'fear', 'peace', 'play', 'cheer'],
+    medium: ['truth', 'boast', 'skill', 'thank', 'rest'],
+    hard:   ['sorrow', 'dread', 'spite', 'scorn', 'deceit']
+  },
+  '-ous': {
+    easy:   ['fame', 'nerve', 'danger', 'humor', 'poison'],
+    medium: ['courage', 'envy', 'fury', 'glory', 'mystery'],
+    hard:   ['ambition', 'caution', 'riot', 'outrage', 'luxury']
+  },
+  '-ish': {
+    easy:   ['child', 'fool', 'self', 'clown', 'snob'],
+    medium: ['fever', 'fiend', 'freak', 'wolf', 'lout'],
+    hard:   ['rogue', 'ghoul', 'imp', 'knave', 'brute']
+  }
+};
+
+const ROUND_SUFFIXES = ['-ful', '-ous', '-ish'];
+
+/* ============================================================
+   STATE
+============================================================ */
+const G = {
+  difficulty: 'easy',
+  score: 0, correct: 0, sorted: 0,
+  selected: null,
+  words: [], queue: [],
+  spawned: 0,
+  running: false,
+  rafId: null, spawnTimer: null,
+  lastTs: 0
+};
+
+const FALL_PX_S      = 52;
+const SWAY_AMP       = 13;
+const SPAWN_MS       = 2700;
+const WORDS_PER_SUFFIX = 5;
+
+/* ============================================================
+   UTILITY
+============================================================ */
+function show(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.add('hidden'));
+  document.getElementById('screen-' + id).classList.remove('hidden');
+}
+
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+/* ============================================================
+   ENTRY POINTS
+============================================================ */
+function startGame(difficulty) {
+  G.difficulty = difficulty;
+  G.score = 0; G.correct = 0; G.sorted = 0;
+  beginRound();
+}
+
+function restartGame() { startGame(G.difficulty); }
+
+function beginRound() {
+  stopLoop();
+  clearArea();
+  G.words = []; G.selected = null; G.spawned = 0; G.running = true;
+
+  G.queue = shuffle(
+    ROUND_SUFFIXES.flatMap(suffix =>
+      shuffle([...WORD_BANK[suffix][G.difficulty]]).slice(0, WORDS_PER_SUFFIX)
+        .map(word => ({ word, suffix }))
+    )
+  );
+
+  document.getElementById('score-val').textContent = G.score;
+  document.getElementById('round-lbl').textContent = 'Round 1';
+  document.getElementById('difficulty-lbl').textContent =
+    G.difficulty.charAt(0).toUpperCase() + G.difficulty.slice(1);
+  renderBuckets(ROUND_SUFFIXES);
+  show('game');
+
+  G.spawnTimer = setTimeout(spawnNext, 900);
+  G.lastTs = performance.now();
+  G.rafId = requestAnimationFrame(loop);
+}
+
+/* ============================================================
+   BUCKETS
+============================================================ */
+function renderBuckets(suffixes) {
+  const row = document.getElementById('buckets-row');
+  row.innerHTML = '';
+  suffixes.forEach(suffix => {
+    const b = document.createElement('div');
+    b.className = 'bucket';
+    b.dataset.suffix = suffix;
+    b.innerHTML = `
+      <div class="bucket-barrel"></div>
+      <div class="bucket-label">${suffix}</div>
+      <div class="bucket-hint">tap to sort</div>
+    `;
+    b.addEventListener('click', () => onBucket(suffix, b));
+    row.appendChild(b);
+  });
+}
+
+/* ============================================================
+   SPAWN
+============================================================ */
+function spawnNext() {
+  if (!G.running || G.spawned >= G.queue.length) return;
+
+  const { word, suffix } = G.queue[G.spawned++];
+  const area = document.getElementById('game-area');
+  const W = area.clientWidth;
+
+  const el = document.createElement('div');
+  el.className = 'word-card';
+  el.textContent = word;
+  el.style.top = '-60px';
+
+  const estW = Math.max(90, word.length * 11 + 36);
+  const baseX = Math.random() * (W - estW - 30) + 20;
+  el.style.left = baseX + 'px';
+
+  const wo = {
+    word, suffix, el,
+    x: baseX, baseX,
+    y: -60,
+    phase: Math.random() * Math.PI * 2,
+    speed: 0.7 + Math.random() * 0.5,
+    paused: false, done: false, age: 0
+  };
+
+  el.addEventListener('click', e => { e.stopPropagation(); onWord(wo); });
+  area.appendChild(el);
+  G.words.push(wo);
+
+  if (G.spawned < G.queue.length) {
+    G.spawnTimer = setTimeout(spawnNext, SPAWN_MS);
+  }
+}
+
+/* ============================================================
+   GAME LOOP
+============================================================ */
+function loop(ts) {
+  if (!G.running) return;
+  const dt = Math.min(ts - G.lastTs, 80);
+  G.lastTs = ts;
+
+  const area = document.getElementById('game-area');
+  const H = area.clientHeight;
+
+  G.words.forEach(wo => {
+    if (wo.paused || wo.done) return;
+    wo.age += dt / 1000;
+    wo.y   += FALL_PX_S * (dt / 1000);
+    const sx = Math.sin(wo.phase + wo.age * wo.speed) * SWAY_AMP;
+    wo.el.style.top  = wo.y + 'px';
+    wo.el.style.left = (wo.baseX + sx) + 'px';
+    if (wo.y > H + 10) onMiss(wo);
+  });
+
+  checkRoundEnd();
+  G.rafId = requestAnimationFrame(loop);
+}
+
+function stopLoop() {
+  G.running = false;
+  if (G.rafId)     { cancelAnimationFrame(G.rafId); G.rafId = null; }
+  if (G.spawnTimer) { clearTimeout(G.spawnTimer); G.spawnTimer = null; }
+}
+
+function clearArea() {
+  document.getElementById('game-area')
+    .querySelectorAll('.word-card, .score-pop')
+    .forEach(e => e.remove());
+}
+
+/* ============================================================
+   INTERACTION
+============================================================ */
+function onWord(wo) {
+  if (wo.done) return;
+  if (G.selected === wo) {
+    wo.el.classList.remove('selected');
+    wo.paused = false;
+    G.selected = null;
+    setBucketsLit(false);
+    return;
+  }
+  if (G.selected) {
+    G.selected.el.classList.remove('selected');
+    G.selected.paused = false;
+  }
+  wo.el.classList.add('selected');
+  wo.paused = true;
+  G.selected = wo;
+  setBucketsLit(true);
+}
+
+function onBucket(suffix, bucketEl) {
+  if (!G.selected) return;
+  const wo = G.selected;
+  G.selected = null;
+  setBucketsLit(false);
+  wo.el.classList.remove('selected');
+  wo.done = true; wo.paused = true;
+  G.sorted++;
+
+  if (suffix === wo.suffix) {
+    G.correct++;
+    addScore(10, wo.el);
+    flashBucket(bucketEl, 'correct');
+    fadeWord(wo.el, 300);
+  } else {
+    addScore(-5, wo.el);
+    flashBucket(bucketEl, 'wrong');
+    const correctEl = document.querySelector(`.bucket[data-suffix="${wo.suffix}"]`);
+    if (correctEl) { flashBucket(correctEl, 'hint'); showHint(correctEl, wo.word, wo.suffix); }
+    flyWord(wo.el, correctEl || bucketEl);
+  }
+}
+
+function onMiss(wo) {
+  if (wo.done) return;
+  wo.done = true; wo.paused = true;
+  if (G.selected === wo) { G.selected = null; setBucketsLit(false); }
+  G.sorted++;
+  addScore(-5, null);
+  const correctEl = document.querySelector(`.bucket[data-suffix="${wo.suffix}"]`);
+  if (correctEl) { flashBucket(correctEl, 'hint'); showHint(correctEl, wo.word, wo.suffix); }
+  fadeWord(wo.el, 200);
+}
+
+/* ============================================================
+   VISUAL HELPERS
+============================================================ */
+function setBucketsLit(on) {
+  document.querySelectorAll('.bucket').forEach(b => b.classList.toggle('lit', on));
+}
+
+function flashBucket(el, type) {
+  el.classList.remove('flash-correct', 'flash-wrong', 'flash-hint');
+  void el.offsetWidth;
+  el.classList.add('flash-' + type);
+  setTimeout(() => el.classList.remove('flash-' + type), 700);
+}
+
+function showHint(bucketEl, word, suffix) {
+  const hint = bucketEl.querySelector('.bucket-hint');
+  hint.textContent = `"${word}${suffix}" goes here!`;
+  hint.style.color = '#FFD700';
+  setTimeout(() => { hint.textContent = 'tap to sort'; hint.style.color = ''; }, 1600);
+}
+
+function fadeWord(el, ms) {
+  el.style.transition = `opacity ${ms}ms ease`;
+  el.style.opacity = '0';
+  setTimeout(() => el.remove(), ms + 50);
+}
+
+function flyWord(el, targetEl) {
+  if (!targetEl) { fadeWord(el, 300); return; }
+  const eR = el.getBoundingClientRect();
+  const tR = targetEl.getBoundingClientRect();
+  const dx = (tR.left + tR.width / 2)  - (eR.left + eR.width / 2);
+  const dy = (tR.top  + tR.height / 2) - (eR.top  + eR.height / 2);
+  el.style.transition = 'transform 0.45s cubic-bezier(.4,0,.6,1), opacity 0.25s ease 0.28s';
+  el.style.transform  = `translate(${dx}px,${dy}px) scale(0.65)`;
+  el.style.opacity    = '0';
+  el.style.zIndex     = '50';
+  setTimeout(() => el.remove(), 520);
+}
+
+function addScore(delta, anchor) {
+  G.score = Math.max(0, G.score + delta);
+  document.getElementById('score-val').textContent = G.score;
+
+  const area = document.getElementById('game-area');
+  const pop  = document.createElement('div');
+  pop.className = 'score-pop ' + (delta > 0 ? 'pos' : 'neg');
+  pop.textContent = delta > 0 ? `+${delta}` : `${delta}`;
+
+  if (anchor) {
+    const aR = area.getBoundingClientRect();
+    const eR = anchor.getBoundingClientRect();
+    pop.style.left = (eR.left - aR.left + eR.width / 2 - 18) + 'px';
+    pop.style.top  = (eR.top  - aR.top  - 8) + 'px';
+  } else {
+    pop.style.left = '50%'; pop.style.top = '35%';
+    pop.style.transform = 'translateX(-50%)';
+  }
+
+  area.appendChild(pop);
+  setTimeout(() => pop.remove(), 1050);
+}
+
+/* ============================================================
+   ROUND / GAME END
+============================================================ */
+function checkRoundEnd() {
+  if (!G.running) return;
+  if (G.spawned < G.queue.length) return;
+  if (G.words.some(w => !w.done)) return;
+  stopLoop();
+  setTimeout(showGameOver, 500);
+}
+
+function showGameOver() {
+  document.getElementById('go-score').textContent = G.score;
+  const pct = G.sorted > 0 ? Math.round((G.correct / G.sorted) * 100) : 0;
+  document.getElementById('go-acc').textContent =
+    `Accuracy: ${pct}% — ${G.correct} of ${G.sorted} words correct`;
+  const msgs = [
+    [90, "Outstanding! You're a suffix master! 🌟"],
+    [75, "Great work! You clearly know your suffixes."],
+    [50, "Good effort! Keep practising and you'll ace it."],
+    [ 0, "Keep going — every word you sort teaches you something new!"]
+  ];
+  document.getElementById('go-msg').textContent = msgs.find(([t]) => pct >= t)[1];
+  show('gameover');
+}
+
+/* ============================================================
+   AMBIENT FIREFLIES
+============================================================ */
+for (let i = 0; i < 14; i++) {
+  const f = document.createElement('div');
+  f.className = 'fly';
+  f.style.left = Math.random() * 100 + 'vw';
+  f.style.top  = (10 + Math.random() * 75) + 'vh';
+  f.style.setProperty('--dx', (Math.random() * 70 - 35) + 'px');
+  f.style.setProperty('--dy', (Math.random() * 70 - 35) + 'px');
+  f.style.setProperty('--dur', (4 + Math.random() * 7) + 's');
+  f.style.setProperty('--del', (Math.random() * 9) + 's');
+  document.body.appendChild(f);
+}
+
+document.addEventListener('click', () => {
+  const b = document.getElementById('inst-banner');
+  if (b) { b.style.opacity = '0'; setTimeout(() => b?.remove(), 300); }
+}, { once: true });
+</script>
+</body>
+</html>
