@@ -10,16 +10,16 @@
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
-      background: #0E1530;
+      background: #F7F5FF;
       min-height: 100vh;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
-      color: #DDE4FF;
+      color: #1E1B4B;
     }
     input, button, textarea { font-family: inherit; }
-    input::placeholder, textarea::placeholder { color: #5D6D99; }
+    input::placeholder, textarea::placeholder { color: #A8A4C8; }
     ::-webkit-scrollbar { width: 6px; }
-    ::-webkit-scrollbar-track { background: #0E1530; }
-    ::-webkit-scrollbar-thumb { background: #253060; border-radius: 3px; }
+    ::-webkit-scrollbar-track { background: #F7F5FF; }
+    ::-webkit-scrollbar-thumb { background: #D4D0F0; border-radius: 3px; }
     @keyframes shake {
       0%,100% { transform: translateX(0); }
       20%      { transform: translateX(-6px); }
@@ -37,22 +37,22 @@
 
     /* ── Palette ───────────────────────────────────────────────── */
     const T = {
-      bgPri:  "#0E1530",
-      bgSec:  "#162045",
-      bgCard: "#1B2550",
-      txtPri: "#DDE4FF",
-      txtSec: "#8A9BC0",
-      txtTer: "#5D6D99",
-      borPri: "#3A4A80",
-      borSec: "#253060",
-      borTer: "#1C2450",
+      bgPri:  "#FFFFFF",
+      bgSec:  "#F2F0FF",
+      bgCard: "#FAFAFE",
+      txtPri: "#1E1B4B",
+      txtSec: "#6B6B8A",
+      txtTer: "#A8A4C8",
+      borPri: "#C4BFF0",
+      borSec: "#DDD9F7",
+      borTer: "#EDEAF9",
     };
 
     /* ── Level metadata ────────────────────────────────────────── */
     const LEVELS = [
-      { id: "novice",    label: "Novice",    color: "#00C9A7", bg: "#0A2520", border: "#007B66", desc: "Simple words, clear clues" },
-      { id: "sleuth",    label: "Sleuth",    color: "#F0B429", bg: "#2B1F05", border: "#9B7318", desc: "A little trickier, think harder" },
-      { id: "wordsmith", label: "Wordsmith", color: "#9B7FE8", bg: "#160F3A", border: "#6650C4", desc: "Challenging words, clever clues" },
+      { id: "novice",    label: "Novice",    color: "#2E7D52", bg: "#E8F5EE", border: "#8ECBA8", desc: "Simple words, clear clues" },
+      { id: "sleuth",    label: "Sleuth",    color: "#8C5E00", bg: "#FDF3DC", border: "#EEC96A", desc: "A little trickier, think harder" },
+      { id: "wordsmith", label: "Wordsmith", color: "#4A38A8", bg: "#EFEDFB", border: "#B8B0EC", desc: "Challenging words, clever clues" },
     ];
 
     /* ── Word bank ─────────────────────────────────────────────── */
@@ -60,79 +60,79 @@
       novice: [
         { themeTitle: "Catch the wave", themeReveal: "All 5 words are things you find at the beach or in the sea!",
           words: [
-            { word: "WAVE",   clue: "Water that rises and crashes onto the shore.",                         nudge: "You might surf on one of these." },
+            { word: "WAVE",   clue: "Water that rises and crashes onto the shore.",                          nudge: "You might surf on one of these." },
             { word: "SHELL",  clue: "A hard outer covering found on the sand, once home to a sea creature.", nudge: "You can hold it to your ear and 'hear the sea'." },
-            { word: "SAND",   clue: "Tiny grains you build castles with at the beach.",                     nudge: "It gets in your shoes and everywhere else!" },
-            { word: "CRAB",   clue: "A creature with claws and a hard shell that walks sideways.",           nudge: "Watch your toes — it likes to pinch!" },
-            { word: "TIDE",   clue: "When the sea comes in and goes out twice a day.",                       nudge: "High ___ means more water on the beach." },
+            { word: "SAND",   clue: "Tiny grains you build castles with at the beach.",                      nudge: "It gets in your shoes and everywhere else!" },
+            { word: "CRAB",   clue: "A creature with claws and a hard shell that walks sideways.",            nudge: "Watch your toes — it likes to pinch!" },
+            { word: "TIDE",   clue: "When the sea comes in and goes out twice a day.",                        nudge: "High ___ means more water on the beach." },
           ]},
         { themeTitle: "Sky's the limit", themeReveal: "All 5 words are things you see or feel when you look up at the sky!",
           words: [
-            { word: "CLOUD",   clue: "A fluffy white or grey shape floating in the sky.",              nudge: "You find shapes in them on a lazy afternoon." },
-            { word: "RAIN",    clue: "Water that falls from clouds down to the ground.",                nudge: "Don't forget your umbrella!" },
-            { word: "WIND",    clue: "Moving air that can be gentle or very strong.",                   nudge: "It blows your hat off on a breezy day." },
-            { word: "SNOW",    clue: "Frozen white flakes that fall from the sky in cold weather.",     nudge: "Great for making snowmen!" },
-            { word: "THUNDER", clue: "The loud booming sound that follows lightning in a storm.",       nudge: "Count the seconds after lightning to know how far it is." },
+            { word: "CLOUD",   clue: "A fluffy white or grey shape floating in the sky.",             nudge: "You find shapes in them on a lazy afternoon." },
+            { word: "RAIN",    clue: "Water that falls from clouds down to the ground.",               nudge: "Don't forget your umbrella!" },
+            { word: "WIND",    clue: "Moving air that can be gentle or very strong.",                  nudge: "It blows your hat off on a breezy day." },
+            { word: "SNOW",    clue: "Frozen white flakes that fall from the sky in cold weather.",    nudge: "Great for making snowmen!" },
+            { word: "THUNDER", clue: "The loud booming sound that follows lightning in a storm.",      nudge: "Count the seconds after lightning to know how far it is." },
           ]},
         { themeTitle: "Green fingers", themeReveal: "All 5 words are things you find in a garden or related to plants!",
           words: [
-            { word: "SEED",  clue: "A tiny thing you plant in soil that grows into a plant.",               nudge: "All flowers and trees start from one of these." },
-            { word: "ROOT",  clue: "The part of a plant that grows underground and drinks up water.",        nudge: "Trees have deep ones that anchor them." },
-            { word: "PETAL", clue: "The colourful part of a flower that attracts bees.",                    nudge: "You might pull them off one by one." },
-            { word: "THORN", clue: "A sharp spike on the stem of a rose.",                                  nudge: "Be careful when picking roses!" },
-            { word: "STEM",  clue: "The long stalk that connects a flower's head to the ground.",           nudge: "Water travels up through this part." },
+            { word: "SEED",  clue: "A tiny thing you plant in soil that grows into a plant.",              nudge: "All flowers and trees start from one of these." },
+            { word: "ROOT",  clue: "The part of a plant that grows underground and drinks up water.",       nudge: "Trees have deep ones that anchor them." },
+            { word: "PETAL", clue: "The colourful part of a flower that attracts bees.",                   nudge: "You might pull them off one by one." },
+            { word: "THORN", clue: "A sharp spike on the stem of a rose.",                                 nudge: "Be careful when picking roses!" },
+            { word: "STEM",  clue: "The long stalk that connects a flower's head to the ground.",          nudge: "Water travels up through this part." },
           ]},
       ],
       sleuth: [
         { themeTitle: "Brain at work", themeReveal: "All 5 words describe things your mind and memory do every day.",
           words: [
-            { word: "FOCUS",    clue: "Giving all your attention to just one thing at a time.",                    nudge: "Hard to do when your phone keeps buzzing." },
-            { word: "RECALL",   clue: "Bringing back something you learned or saw earlier.",                       nudge: "A pop quiz tests your power of ___." },
-            { word: "HABIT",    clue: "Something you do so regularly it happens almost without thinking.",          nudge: "Brushing your teeth is a morning ___." },
-            { word: "LOGIC",    clue: "Using facts and clear thinking to reach a sensible answer.",                nudge: "Maths and puzzles both rely on ___." },
-            { word: "INSTINCT", clue: "A feeling or reaction that happens naturally, without needing to think.",   nudge: "A mother's ___ tells her when something is wrong." },
+            { word: "FOCUS",    clue: "Giving all your attention to just one thing at a time.",                   nudge: "Hard to do when your phone keeps buzzing." },
+            { word: "RECALL",   clue: "Bringing back something you learned or saw earlier.",                      nudge: "A pop quiz tests your power of ___." },
+            { word: "HABIT",    clue: "Something you do so regularly it happens almost without thinking.",         nudge: "Brushing your teeth is a morning ___." },
+            { word: "LOGIC",    clue: "Using facts and clear thinking to reach a sensible answer.",               nudge: "Maths and puzzles both rely on ___." },
+            { word: "INSTINCT", clue: "A feeling or reaction that happens naturally, without needing to think.",  nudge: "A mother's ___ tells her when something is wrong." },
           ]},
         { themeTitle: "Layer by layer", themeReveal: "All 5 words relate to the Earth — its surface, layers, and natural features.",
           words: [
             { word: "CRATER",  clue: "A large bowl-shaped dip in the ground, often made by a meteor or volcano.", nudge: "The moon is covered in these." },
-            { word: "FOSSIL",  clue: "The preserved remains of an ancient creature found in rock.",               nudge: "Dinosaur bones are the most famous kind." },
+            { word: "FOSSIL",  clue: "The preserved remains of an ancient creature found in rock.",                nudge: "Dinosaur bones are the most famous kind." },
             { word: "VALLEY",  clue: "A low area of land between two hills, often with a river.",                 nudge: "The Amazon river runs through a wide ___." },
             { word: "MAGMA",   clue: "Hot molten rock found beneath the Earth's surface.",                        nudge: "Once it erupts from a volcano it becomes: lava." },
             { word: "GLACIER", clue: "A huge, slow-moving river of ice that carves through mountains.",           nudge: "Climate change is causing these to melt." },
           ]},
         { themeTitle: "Once upon a time", themeReveal: "All 5 words are things you find in classic fairy tales and folklore.",
           words: [
-            { word: "CURSE",   clue: "A spell placed on someone that brings misfortune.",                             nudge: "Sleeping Beauty fell into a deep sleep because of one." },
-            { word: "QUEST",   clue: "A long and difficult journey with an important goal.",                          nudge: "Knights go on these to prove their worth." },
-            { word: "POTION",  clue: "A magical liquid that causes something unusual to happen when drunk.",          nudge: "Alice drank one that made her very small." },
-            { word: "RIDDLE",  clue: "A puzzling question that has a clever or unexpected answer.",                   nudge: "The Sphinx asked one — and you had to answer or else." },
-            { word: "ENCHANT", clue: "To put someone under a magical spell.",                                        nudge: "A wizard can ___ objects to give them special powers." },
+            { word: "CURSE",   clue: "A spell placed on someone that brings misfortune.",                            nudge: "Sleeping Beauty fell into a deep sleep because of one." },
+            { word: "QUEST",   clue: "A long and difficult journey with an important goal.",                         nudge: "Knights go on these to prove their worth." },
+            { word: "POTION",  clue: "A magical liquid that causes something unusual to happen when drunk.",         nudge: "Alice drank one that made her very small." },
+            { word: "RIDDLE",  clue: "A puzzling question that has a clever or unexpected answer.",                  nudge: "The Sphinx asked one — and you had to answer or else." },
+            { word: "ENCHANT", clue: "To put someone under a magical spell.",                                       nudge: "A wizard can ___ objects to give them special powers." },
           ]},
       ],
       wordsmith: [
         { themeTitle: "Shades of meaning", themeReveal: "All 5 words are concepts about how people think, argue, and form beliefs.",
           words: [
-            { word: "BIAS",     clue: "A leaning toward one side that affects your judgement unfairly.",               nudge: "A referee with ___ might favour the home team." },
-            { word: "PARADOX",  clue: "A statement that seems to contradict itself but may still be true.",            nudge: "'Less is more' is a simple ___." },
-            { word: "CYNICAL",  clue: "Believing that people are mostly motivated by selfishness.",                    nudge: "A ___ person rolls their eyes at charity campaigns." },
-            { word: "DOGMA",    clue: "A fixed belief a group insists must be accepted without question.",             nudge: "Challenging political or religious ___ takes courage." },
-            { word: "FALLACY",  clue: "A mistake in reasoning that makes an argument seem valid when it isn't.",       nudge: "'Everyone believes it, so it must be true' is a logical ___." },
+            { word: "BIAS",     clue: "A leaning toward one side that affects your judgement unfairly.",              nudge: "A referee with ___ might favour the home team." },
+            { word: "PARADOX",  clue: "A statement that seems to contradict itself but may still be true.",           nudge: "'Less is more' is a simple ___." },
+            { word: "CYNICAL",  clue: "Believing that people are mostly motivated by selfishness.",                   nudge: "A ___ person rolls their eyes at charity campaigns." },
+            { word: "DOGMA",    clue: "A fixed belief a group insists must be accepted without question.",            nudge: "Challenging political or religious ___ takes courage." },
+            { word: "FALLACY",  clue: "A mistake in reasoning that makes an argument seem valid when it isn't.",      nudge: "'Everyone believes it, so it must be true' is a logical ___." },
           ]},
         { themeTitle: "Word within the word", themeReveal: "All 5 words come from the study of language — how we speak, write, and communicate.",
           words: [
-            { word: "DIALECT",  clue: "A version of a language spoken by people in a particular region.",              nudge: "Cockney and Geordie are both English ___s." },
-            { word: "SYNONYM",  clue: "A word that means the same or nearly the same as another word.",                nudge: "'Happy' and 'joyful' are ___s." },
-            { word: "IRONY",    clue: "Saying or meaning the opposite of what you expect, often for effect.",          nudge: "Naming a tall man 'Tiny' is verbal ___." },
-            { word: "METAPHOR", clue: "Describing something by saying it is something else entirely.",                 nudge: "'Life is a journey' is a well-worn ___." },
-            { word: "RHETORIC", clue: "The art of using language in a persuasive and effective way.",                  nudge: "Politicians are trained in ___ to win over audiences." },
+            { word: "DIALECT",  clue: "A version of a language spoken by people in a particular region.",             nudge: "Cockney and Geordie are both English ___s." },
+            { word: "SYNONYM",  clue: "A word that means the same or nearly the same as another word.",               nudge: "'Happy' and 'joyful' are ___s." },
+            { word: "IRONY",    clue: "Saying or meaning the opposite of what you expect, often for effect.",         nudge: "Naming a tall man 'Tiny' is verbal ___." },
+            { word: "METAPHOR", clue: "Describing something by saying it is something else entirely.",                nudge: "'Life is a journey' is a well-worn ___." },
+            { word: "RHETORIC", clue: "The art of using language in a persuasive and effective way.",                 nudge: "Politicians are trained in ___ to win over audiences." },
           ]},
         { themeTitle: "Power and the people", themeReveal: "All 5 words relate to politics, power, and how societies are governed.",
           words: [
-            { word: "VETO",      clue: "The power to block or reject a decision made by others.",                         nudge: "A president can ___ a bill passed by parliament." },
-            { word: "EXILE",     clue: "Being forced to leave your own country, often as a punishment.",                  nudge: "Napoleon was sent into ___ after his defeat." },
-            { word: "AMNESTY",   clue: "An official pardon granted to a group of people for past offences.",              nudge: "Governments sometimes declare ___ for political prisoners." },
-            { word: "DISSENT",   clue: "Disagreeing with an official position, especially publicly.",                     nudge: "In authoritarian states, ___ can be dangerous." },
-            { word: "MANIFESTO", clue: "A public declaration of a group's beliefs, goals, and intentions.",               nudge: "A political party publishes a ___ before an election." },
+            { word: "VETO",      clue: "The power to block or reject a decision made by others.",                        nudge: "A president can ___ a bill passed by parliament." },
+            { word: "EXILE",     clue: "Being forced to leave your own country, often as a punishment.",                 nudge: "Napoleon was sent into ___ after his defeat." },
+            { word: "AMNESTY",   clue: "An official pardon granted to a group of people for past offences.",             nudge: "Governments sometimes declare ___ for political prisoners." },
+            { word: "DISSENT",   clue: "Disagreeing with an official position, especially publicly.",                    nudge: "In authoritarian states, ___ can be dangerous." },
+            { word: "MANIFESTO", clue: "A public declaration of a group's beliefs, goals, and intentions.",              nudge: "A political party publishes a ___ before an election." },
           ]},
       ],
     };
@@ -145,13 +145,13 @@
 
     const MAX_ATTEMPTS = 3;
 
-    /* ── Score badges (space palette) ─────────────────────────── */
+    /* ── Score badges ──────────────────────────────────────────── */
     const SCORE_BADGES = [
-      { min: 15, title: "You are a Wordmaster!",    sub: "Flawless. Every word, first try.",                   color: "#9B7FE8", bg: "#160F3A", border: "#6650C4" },
-      { min: 12, title: "You are a Linguist!",       sub: "Sharp instincts and a rich vocabulary.",             color: "#00C9A7", bg: "#0A2520", border: "#007B66" },
-      { min: 9,  title: "You are a Word Sleuth!",    sub: "Persistent, methodical, and accurate.",              color: "#F0B429", bg: "#2B1F05", border: "#9B7318" },
-      { min: 6,  title: "You are a Word Scout!",     sub: "A good effort — keep exploring!",                   color: "#5B8EE8", bg: "#0A1535", border: "#2A5090" },
-      { min: 0,  title: "You are a Word Wanderer!",  sub: "Every expert started somewhere. Try again!",         color: "#8A9BC0", bg: "#162045", border: "#253060" },
+      { min: 15, title: "You are a Wordmaster!",   sub: "Flawless. Every word, first try.",               color: "#4A38A8", bg: "#EFEDFB", border: "#B8B0EC" },
+      { min: 12, title: "You are a Linguist!",      sub: "Sharp instincts and a rich vocabulary.",         color: "#2E7D52", bg: "#E8F5EE", border: "#8ECBA8" },
+      { min: 9,  title: "You are a Word Sleuth!",   sub: "Persistent, methodical, and accurate.",          color: "#8C5E00", bg: "#FDF3DC", border: "#EEC96A" },
+      { min: 6,  title: "You are a Word Scout!",    sub: "A good effort — keep exploring!",               color: "#1B5FA0", bg: "#E4F0FB", border: "#87C0EC" },
+      { min: 0,  title: "You are a Word Wanderer!", sub: "Every expert started somewhere. Try again!",     color: "#5E5E7A", bg: "#F2F0FF", border: "#C4BFF0" },
     ];
 
     function getScoreBadge(score) { return SCORE_BADGES.find(b => score >= b.min); }
@@ -160,10 +160,10 @@
     function Logo({ size = 40 }) {
       return (
         <svg width={size} height={size} viewBox="0 0 44 44" fill="none">
-          <rect width="44" height="44" rx="10" fill="#160F3A"/>
-          <rect x="7"  y="10" width="12" height="12" rx="3" fill="#5B4FAA"/>
-          <rect x="21" y="10" width="12" height="12" rx="3" fill="#9B7FE8"/>
-          <rect x="14" y="24" width="12" height="12" rx="3" fill="#3A2E8A"/>
+          <rect width="44" height="44" rx="10" fill="#EFEDFB"/>
+          <rect x="7"  y="10" width="12" height="12" rx="3" fill="#8B82DD"/>
+          <rect x="21" y="10" width="12" height="12" rx="3" fill="#B8B0EC"/>
+          <rect x="14" y="24" width="12" height="12" rx="3" fill="#5E54C8"/>
           <circle cx="19.5" cy="16" r="2" fill="white"/>
           <circle cx="27"   cy="16" r="2" fill="white"/>
           <circle cx="20"   cy="30" r="2" fill="white"/>
@@ -181,7 +181,7 @@
         canvas.width  = canvas.offsetWidth;
         canvas.height = canvas.offsetHeight;
         const particles = [];
-        const colors = ["#9B7FE8","#00C9A7","#F0B429","#5B8EE8","#E8659B","#00BBAA"];
+        const colors = ["#8B82DD","#5EC48A","#F0C040","#5BA8E8","#E87090","#5ED0C0"];
         for (let b = 0; b < 6; b++) {
           const x = Math.random() * canvas.width;
           const y = Math.random() * canvas.height * 0.6;
@@ -215,16 +215,16 @@
     /* ── Home screen ───────────────────────────────────────────── */
     function Home({ onStart }) {
       const steps = [
-        { icon: "📖", color: "#00C9A7", bg: "#0A2520", border: "#007B66", label: "Read the clue",    detail: "Each word comes with a clue. Think carefully — the answer might surprise you!" },
-        { icon: "✏️", color: "#F0B429", bg: "#2B1F05", border: "#9B7318", label: "Guess the words",  detail: "3 attempts per word. A hint unlocks on your 2nd try to help you along." },
-        { icon: "🔗", color: "#9B7FE8", bg: "#160F3A", border: "#6650C4", label: "Discover the link", detail: "All 5 words share a hidden theme — see if you can spot it before it's revealed!" },
+        { icon: "📖", color: "#2E7D52", bg: "#E8F5EE", border: "#8ECBA8", label: "Read the clue",     detail: "Each word comes with a clue. Think carefully — the answer might surprise you!" },
+        { icon: "✏️", color: "#8C5E00", bg: "#FDF3DC", border: "#EEC96A", label: "Guess the words",   detail: "3 attempts per word. A hint unlocks on your 2nd try to help you along." },
+        { icon: "🔗", color: "#4A38A8", bg: "#EFEDFB", border: "#B8B0EC", label: "Discover the link", detail: "All 5 words share a hidden theme — see if you can spot it before it's revealed!" },
       ];
       return (
         <div style={{maxWidth:520, margin:"0 auto", display:"flex", flexDirection:"column"}}>
-          <div style={{background:"#160F3A", borderRadius:"0 0 16px 16px", padding:"1.5rem 1.5rem 1.25rem", textAlign:"center", marginBottom:"1rem", border:"0.5px solid #4A3A9E", borderTop:"none"}}>
+          <div style={{background:"#EFEDFB", borderRadius:"0 0 16px 16px", padding:"1.5rem 1.5rem 1.25rem", textAlign:"center", marginBottom:"1rem", border:"0.5px solid #C4BFF0", borderTop:"none"}}>
             <div style={{display:"flex", justifyContent:"center", marginBottom:"0.6rem"}}><Logo size={44} /></div>
-            <p style={{fontSize:28, fontWeight:500, color:"#C8C0FF", margin:"0 0 0.2rem", letterSpacing:-1}}>Linkle</p>
-            <p style={{fontSize:13, color:"#9B7FE8", margin:0}}>Uncover the words. Discover the link.</p>
+            <p style={{fontSize:28, fontWeight:500, color:"#2B2475", margin:"0 0 0.2rem", letterSpacing:-1}}>Linkle</p>
+            <p style={{fontSize:13, color:"#6658C8", margin:0}}>Uncover the words. Discover the link.</p>
           </div>
 
           <div style={{padding:"0 1rem", display:"flex", flexDirection:"column", gap:"0.75rem"}}>
@@ -248,13 +248,13 @@
                 <p style={{margin:0, fontSize:12, color:T.txtSec}}>Three levels, fresh words every day</p>
               </div>
               <div style={{display:"flex", gap:5}}>
-                {[["#0A2520","#007B66"],["#2B1F05","#9B7318"],["#160F3A","#6650C4"]].map(([bg,br],i) => (
+                {[["#E8F5EE","#8ECBA8"],["#FDF3DC","#EEC96A"],["#EFEDFB","#B8B0EC"]].map(([bg,br],i) => (
                   <div key={i} style={{width:12, height:12, borderRadius:3, background:bg, border:`0.5px solid ${br}`}} />
                 ))}
               </div>
             </div>
 
-            <button onClick={onStart} style={{width:"100%", padding:"12px", borderRadius:10, fontSize:15, fontWeight:500, cursor:"pointer", border:"0.5px solid #6650C4", background:"#160F3A", color:"#9B7FE8"}}>
+            <button onClick={onStart} style={{width:"100%", padding:"12px", borderRadius:10, fontSize:15, fontWeight:500, cursor:"pointer", border:"0.5px solid #B8B0EC", background:"#EFEDFB", color:"#4A38A8"}}>
               Play today's puzzle
             </button>
           </div>
@@ -295,10 +295,10 @@
             const pts = scores[i];
             let bg, col, br;
             if (got) {
-              if (pts === 3)      { bg = "#0A2520"; col = "#00C9A7"; br = "#007B66"; }
-              else if (pts === 2) { bg = "#2B1F05"; col = "#F0B429"; br = "#9B7318"; }
-              else                { bg = "#160F3A"; col = "#9B7FE8"; br = "#6650C4"; }
-            } else               { bg = "#250A0A"; col = "#E86565"; br = "#7B2020"; }
+              if (pts === 3)      { bg = "#E8F5EE"; col = "#2E7D52"; br = "#8ECBA8"; }
+              else if (pts === 2) { bg = "#FDF3DC"; col = "#8C5E00"; br = "#EEC96A"; }
+              else                { bg = "#EFEDFB"; col = "#4A38A8"; br = "#B8B0EC"; }
+            } else               { bg = "#FDEAEA"; col = "#A33030"; br = "#F0A0A0"; }
             const lbl = got ? (pts===3 ? "1st try  +3" : pts===2 ? "2nd try  +2" : "3rd try  +1") : "missed  +0";
             const meaning = puzzle.words[i]?.clue || "";
             const isOpen  = openIdx === i;
@@ -360,12 +360,12 @@
           </div>
 
           <div style={{borderRadius:12, padding:"1.25rem", marginBottom:"1.25rem",
-            background: themeRevealed ? "#160F3A" : T.bgSec,
-            border:     themeRevealed ? "0.5px solid #4A3A9E" : `0.5px solid ${T.borSec}`,
+            background: themeRevealed ? "#EFEDFB" : T.bgSec,
+            border:     themeRevealed ? "0.5px solid #C4BFF0" : `0.5px solid ${T.borSec}`,
             transition: "background 0.6s, border 0.6s"}}>
-            <p style={{fontSize:12, color: themeRevealed ? "#9B7FE8" : T.txtSec, margin:"0 0 0.4rem", fontWeight:500, letterSpacing:0.5, textTransform:"uppercase"}}>Today's connection</p>
-            <p style={{fontSize:17, fontWeight:500, color: themeRevealed ? "#C8C0FF" : T.txtPri, margin:"0 0 0.5rem", fontStyle:"italic"}}>"{puzzle.themeTitle}"</p>
-            {themeRevealed && <p style={{fontSize:14, color:"#9B7FE8", margin:0, lineHeight:1.6}}>{puzzle.themeReveal}</p>}
+            <p style={{fontSize:12, color: themeRevealed ? "#6658C8" : T.txtSec, margin:"0 0 0.4rem", fontWeight:500, letterSpacing:0.5, textTransform:"uppercase"}}>Today's connection</p>
+            <p style={{fontSize:17, fontWeight:500, color: themeRevealed ? "#2B2475" : T.txtPri, margin:"0 0 0.5rem", fontStyle:"italic"}}>"{puzzle.themeTitle}"</p>
+            {themeRevealed && <p style={{fontSize:14, color:"#6658C8", margin:0, lineHeight:1.6}}>{puzzle.themeReveal}</p>}
           </div>
 
           <WordResultList wordHistory={wordHistory} scores={scores} puzzle={puzzle} />
@@ -487,8 +487,8 @@
             {puzzle.words.map((_, i) => {
               let bg = T.bgSec, border = `0.5px solid ${T.borTer}`;
               if (i < wordIndex) {
-                bg     = scores[i] > 0 ? "#0A2520" : "#250A0A";
-                border = scores[i] > 0 ? "0.5px solid #007B66" : "0.5px solid #7B2020";
+                bg     = scores[i] > 0 ? "#E8F5EE" : "#FDEAEA";
+                border = scores[i] > 0 ? "0.5px solid #8ECBA8" : "0.5px solid #F0A0A0";
               } else if (i === wordIndex) {
                 border = `1.5px solid ${T.borPri}`;
               }
@@ -522,8 +522,8 @@
                 onKeyDown={e => e.key === "Enter" && handleGuess()}
                 placeholder="Type your answer..."
                 style={{flex:1, fontSize:16, fontWeight:500, letterSpacing:2, padding:"10px 14px", borderRadius:8,
-                  border: shake ? "1.5px solid #E86565" : `0.5px solid ${T.borSec}`,
-                  background: T.bgSec, color: T.txtPri, outline:"none",
+                  border: shake ? "1.5px solid #E07070" : `0.5px solid ${T.borSec}`,
+                  background: T.bgPri, color: T.txtPri, outline:"none",
                   animation: shake ? "shake 0.4s" : "none"}}
               />
               <button onClick={handleGuess}
@@ -533,15 +533,15 @@
             </div>
           ) : (
             <div style={{padding:"1rem 1.25rem", borderRadius:12, marginBottom:"0.75rem",
-              background: wordResult === "correct" ? "#0A2520" : "#250A0A",
-              border:     wordResult === "correct" ? "0.5px solid #007B66" : "0.5px solid #7B2020"}}>
-              <p style={{margin:0, fontWeight:500, fontSize:15, color: wordResult === "correct" ? "#00C9A7" : "#E86565"}}>
+              background: wordResult === "correct" ? "#E8F5EE" : "#FDEAEA",
+              border:     wordResult === "correct" ? "0.5px solid #8ECBA8" : "0.5px solid #F0A0A0"}}>
+              <p style={{margin:0, fontWeight:500, fontSize:15, color: wordResult === "correct" ? "#2E7D52" : "#A33030"}}>
                 {wordResult === "correct"
                   ? `Correct! "${cw.word}" — ${attempts===1 ? "First try! +3" : attempts===2 ? "+2" : "+1"}`
                   : `The word was "${cw.word}".`}
               </p>
               <button onClick={nextWord}
-                style={{marginTop:"0.75rem", padding:"8px 18px", borderRadius:8, fontSize:14, cursor:"pointer", border:`0.5px solid ${T.borSec}`, background:T.bgSec, color:T.txtPri, fontWeight:500}}>
+                style={{marginTop:"0.75rem", padding:"8px 18px", borderRadius:8, fontSize:14, cursor:"pointer", border:`0.5px solid ${T.borSec}`, background:T.bgPri, color:T.txtPri, fontWeight:500}}>
                 {isLastWord ? "See results →" : "Next word →"}
               </button>
             </div>
