@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Definition Drop | VocabArena</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- ── WELCOME SCREEN ── -->
+  <div id="screen-welcome" class="screen active">
+    <div class="welcome-hero">
+      <div class="logo-bounce">📖</div>
+      <h1>Definition Drop</h1>
+      <p class="tagline">Catch the word before it hits the ground!</p>
+    </div>
+    <div class="grade-section">
+      <h2 class="section-label">Choose Your Grade</h2>
+      <div class="grade-grid" id="grade-grid"></div>
+    </div>
+  </div>
+
+  <!-- ── LEVEL SELECT SCREEN ── -->
+  <div id="screen-level" class="screen">
+    <button class="back-btn" id="back-to-grades">&#8592; Back</button>
+    <div class="level-header">
+      <h2>Grade <span id="grade-label"></span></h2>
+      <p>Pick your challenge</p>
+    </div>
+    <div class="level-cards" id="level-cards"></div>
+  </div>
+
+  <!-- ── ALREADY PLAYED SCREEN ── -->
+  <div id="screen-played" class="screen">
+    <div class="played-wrap">
+      <div class="played-moon">🌙</div>
+      <h2>Round Complete!</h2>
+      <p>You've already played <strong id="played-desc"></strong> today.</p>
+      <p class="played-hint">Come back tomorrow for a fresh round!</p>
+      <button class="btn-primary" id="try-other-btn">Try Another Level</button>
+    </div>
+  </div>
+
+  <!-- ── GAME SCREEN ── -->
+  <div id="screen-game" class="screen">
+    <header class="game-header">
+      <div class="lives" id="lives-display"></div>
+      <div class="q-counter" id="question-counter">1 / 5</div>
+      <div class="game-score">&#9733; <span id="score-count">0</span></div>
+    </header>
+
+    <div class="game-area" id="game-area">
+      <div id="def-card" class="def-card">
+        <p id="def-text"></p>
+      </div>
+      <!-- decorative elements -->
+      <div class="deco deco-star1">&#10022;</div>
+      <div class="deco deco-star2">&#10022;</div>
+      <div class="deco deco-cloud1">&#9729;</div>
+      <div class="deco deco-cloud2">&#9729;</div>
+    </div>
+
+    <div class="timer-track">
+      <div id="timer-bar" class="timer-fill"></div>
+    </div>
+
+    <div class="word-grid" id="word-choices"></div>
+
+    <!-- inline feedback overlay -->
+    <div id="feedback-overlay" class="feedback-overlay hidden">
+      <div class="feedback-box">
+        <div class="fb-emoji" id="fb-emoji"></div>
+        <p class="fb-msg" id="fb-msg"></p>
+        <p class="fb-correct">Answer: <strong id="fb-word"></strong></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── RESULTS SCREEN ── -->
+  <div id="screen-results" class="screen">
+    <div class="results-wrap">
+      <div class="badge-card">
+        <div class="badge-emoji" id="badge-emoji"></div>
+        <h2 class="badge-title" id="badge-title"></h2>
+        <p class="badge-desc" id="badge-desc"></p>
+      </div>
+
+      <div class="result-score">
+        <span class="result-num" id="result-num">0</span>
+        <span class="result-denom" id="result-denom">/ 5 correct</span>
+      </div>
+
+      <div class="words-section">
+        <h3 class="words-heading">Words from Today's Round</h3>
+        <div id="word-accordion"></div>
+      </div>
+
+      <button class="btn-primary" id="play-again-btn">Back to Home</button>
+    </div>
+  </div>
+
+  <script src="words.js"></script>
+  <script src="game.js"></script>
+</body>
+</html>
