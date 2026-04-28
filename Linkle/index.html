@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Linkle — Uncover the words. Discover the link.</title>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #F7F5FF;
+      min-height: 100vh;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      color: #1E1B4B;
+    }
+    input, button, textarea { font-family: inherit; }
+    input::placeholder, textarea::placeholder { color: #A8A4C8; }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: #F7F5FF; }
+    ::-webkit-scrollbar-thumb { background: #D4D0F0; border-radius: 3px; }
+    @keyframes shake {
+      0%,100% { transform: translateX(0); }
+      20%      { transform: translateX(-6px); }
+      40%      { transform: translateX(6px); }
+      60%      { transform: translateX(-4px); }
+      80%      { transform: translateX(4px); }
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useRef } = React;
+
+    /* ── Palette ───────────────────────────────────────────────── */
+    const T = {
+      bgPri:  "#FFFFFF",
+      bgSec:  "#F2F0FF",
+      bgCard: "#FAFAFE",
+      txtPri: "#1E1B4B",
+      txtSec: "#6B6B8A",
+      txtTer: "#A8A4C8",
+      borPri: "#C4BFF0",
+      borSec: "#DDD9F7",
+      borTer: "#EDEAF9",
+    };
+
+    /* ── Level metadata ────────────────────────────────────────── */
+    const LEVELS = [
+      { id: "novice",    label: "Novice",    color: "#2E7D52", bg: "#E8F5EE", border: "#8ECBA8", desc: "Simple words, clear clues" },
+      { id: "sleuth",    label: "Sleuth",    color: "#8C5E00", bg: "#FDF3DC", border: "#EEC96A", desc: "A little trickier, think harder" },
+      { id: "wordsmith", label: "Wordsmith", color: "#4A38A8", bg: "#EFEDFB", border: "#B8B0EC", desc: "Challenging words, clever clues" },
+    ];
+
+    /* ── Word bank ─────────────────────────────────────────────── */
+    const WORD_BANK = {
+      novice: [
+        { themeTitle: "Catch the wave", themeReveal: "All 5 words are things you find at the beach or in the sea!",
+          words: [
+            { word: "WAVE",   clue: "Water that rises and crashes onto the shore.",                          nudge: "You might surf on one of these." },
+            { word: "SHELL",  clue: "A hard outer covering found on the sand, once home to a sea creature.", nudge: "You can hold it to your ear and 'hear the sea'." },
+            { word: "SAND",   clue: "Tiny grains you build castles with at the beach.",                      nudge: "It gets in your shoes and everywhere else!" },
+            { word: "CRAB",   clue: "A creature with claws and a hard shell that walks sideways.",            nudge: "Watch your toes — it likes to pinch!" },
+            { word: "TIDE",   clue: "When the sea comes in and goes out twice a day.",                        nudge: "High ___ means more water on the beach." },
+          ]},
+        { themeTitle: "Sky's the limit", themeReveal: "All 5 words are things you see or feel when you look up at the sky!",
+          words: [
+            { word: "CLOUD",   clue: "A fluffy white or grey shape floating in the sky.",             nudge: "You find shapes in them on a lazy afternoon." },
+            { word: "RAIN",    clue: "Water that falls from clouds down to the ground.",               nudge: "Don't forget your umbrella!" },
+            { word: "WIND",    clue: "Moving air that can be gentle or very strong.",                  nudge: "It blows your hat off on a breezy day." },
+            { word: "SNOW",    clue: "Frozen white flakes that fall from the sky in cold weather.",    nudge: "Great for making snowmen!" },
+            { word: "THUNDER", clue: "The loud booming sound that follows lightning in a storm.",      nudge: "Count the seconds after lightning to know how far it is." },
+          ]},
+        { themeTitle: "Green fingers", themeReveal: "All 5 words are things you find in a garden or related to plants!",
+          words: [
+            { word: "SEED",  clue: "A tiny thing you plant in soil that grows into a plant.",              nudge: "All flowers and trees start from one of these." },
+            { word: "ROOT",  clue: "The part of a plant that grows underground and drinks up water.",       nudge: "Trees have deep ones that anchor them." },
+            { word: "PETAL", clue: "The colourful part of a flower that attracts bees.",                   nudge: "You might pull them off one by one." },
+            { word: "THORN", clue: "A sharp spike on the stem of a rose.",                                 nudge: "Be careful when picking roses!" },
+            { word: "STEM",  clue: "The long stalk that connects a flower's head to the ground.",          nudge: "Water travels up through this part." },
+          ]},
+      ],
+      sleuth: [
+        { themeTitle: "Brain at work", themeReveal: "All 5 words describe things your mind and memory do every day.",
+          words: [
+            { word: "FOCUS",    clue: "Giving all your attention to just one thing at a time.",                   nudge: "Hard to do when your phone keeps buzzing." },
+            { word: "RECALL",   clue: "Bringing back something you learned or saw earlier.",                      nudge: "A pop quiz tests your power of ___." },
+            { word: "HABIT",    clue: "Something you do so regularly it happens almost without thinking.",         nudge: "Brushing your teeth is a morning ___." },
+            { word: "LOGIC",    clue: "Using facts and clear thinking to reach a sensible answer.",               nudge: "Maths and puzzles both rely on ___." },
+            { word: "INSTINCT", clue: "A feeling or reaction that happens naturally, without needing to think.",  nudge: "A mother's ___ tells her when something is wrong." },
+          ]},
+        { themeTitle: "Layer by layer", themeReveal: "All 5 words relate to the Earth — its surface, layers, and natural features.",
+          words: [
+            { word: "CRATER",  clue: "A large bowl-shaped dip in the ground, often made by a meteor or volcano.", nudge: "The moon is covered in these." },
+            { word: "FOSSIL",  clue: "The preserved remains of an ancient creature found in rock.",                nudge: "Dinosaur bones are the most famous kind." },
+            { word: "VALLEY",  clue: "A low area of land between two hills, often with a river.",                 nudge: "The Amazon river runs through a wide ___." },
+            { word: "MAGMA",   clue: "Hot molten rock found beneath the Earth's surface.",                        nudge: "Once it erupts from a volcano it becomes: lava." },
+            { word: "GLACIER", clue: "A huge, slow-moving river of ice that carves through mountains.",           nudge: "Climate change is causing these to melt." },
+          ]},
+        { themeTitle: "Once upon a time", themeReveal: "All 5 words are things you find in classic fairy tales and folklore.",
+          words: [
+            { word: "CURSE",   clue: "A spell placed on someone that brings misfortune.",                            nudge: "Sleeping Beauty fell into a deep sleep because of one." },
+            { word: "QUEST",   clue: "A long and difficult journey with an important goal.",                         nudge: "Knights go on these to prove their worth." },
+            { word: "POTION",  clue: "A magical liquid that causes something unusual to happen when drunk.",         nudge: "Alice drank one that made her very small." },
+            { word: "RIDDLE",  clue: "A puzzling question that has a clever or unexpected answer.",                  nudge: "The Sphinx asked one — and you had to answer or else." },
+            { word: "ENCHANT", clue: "To put someone under a magical spell.",                                       nudge: "A wizard can ___ objects to give them special powers." },
+          ]},
+      ],
+      wordsmith: [
+        { themeTitle: "Shades of meaning", themeReveal: "All 5 words are concepts about how people think, argue, and form beliefs.",
+          words: [
+            { word: "BIAS",     clue: "A leaning toward one side that affects your judgement unfairly.",              nudge: "A referee with ___ might favour the home team." },
+            { word: "PARADOX",  clue: "A statement that seems to contradict itself but may still be true.",           nudge: "'Less is more' is a simple ___." },
+            { word: "CYNICAL",  clue: "Believing that people are mostly motivated by selfishness.",                   nudge: "A ___ person rolls their eyes at charity campaigns." },
+            { word: "DOGMA",    clue: "A fixed belief a group insists must be accepted without question.",            nudge: "Challenging political or religious ___ takes courage." },
+            { word: "FALLACY",  clue: "A mistake in reasoning that makes an argument seem valid when it isn't.",      nudge: "'Everyone believes it, so it must be true' is a logical ___." },
+          ]},
+        { themeTitle: "Word within the word", themeReveal: "All 5 words come from the study of language — how we speak, write, and communicate.",
+          words: [
+            { word: "DIALECT",  clue: "A version of a language spoken by people in a particular region.",             nudge: "Cockney and Geordie are both English ___s." },
+            { word: "SYNONYM",  clue: "A word that means the same or nearly the same as another word.",               nudge: "'Happy' and 'joyful' are ___s." },
+            { word: "IRONY",    clue: "Saying or meaning the opposite of what you expect, often for effect.",         nudge: "Naming a tall man 'Tiny' is verbal ___." },
+            { word: "METAPHOR", clue: "Describing something by saying it is something else entirely.",                nudge: "'Life is a journey' is a well-worn ___." },
+            { word: "RHETORIC", clue: "The art of using language in a persuasive and effective way.",                 nudge: "Politicians are trained in ___ to win over audiences." },
+          ]},
+        { themeTitle: "Power and the people", themeReveal: "All 5 words relate to politics, power, and how societies are governed.",
+          words: [
+            { word: "VETO",      clue: "The power to block or reject a decision made by others.",                        nudge: "A president can ___ a bill passed by parliament." },
+            { word: "EXILE",     clue: "Being forced to leave your own country, often as a punishment.",                 nudge: "Napoleon was sent into ___ after his defeat." },
+            { word: "AMNESTY",   clue: "An official pardon granted to a group of people for past offences.",             nudge: "Governments sometimes declare ___ for political prisoners." },
+            { word: "DISSENT",   clue: "Disagreeing with an official position, especially publicly.",                    nudge: "In authoritarian states, ___ can be dangerous." },
+            { word: "MANIFESTO", clue: "A public declaration of a group's beliefs, goals, and intentions.",              nudge: "A political party publishes a ___ before an election." },
+          ]},
+      ],
+    };
+
+    function getPuzzleIndex() {
+      const start = new Date("2026-04-21");
+      const today = new Date();
+      return Math.abs(Math.floor((today - start) / 86400000)) % 3;
+    }
+
+    const MAX_ATTEMPTS = 3;
+
+    /* ── Score badges ──────────────────────────────────────────── */
+    const SCORE_BADGES = [
+      { min: 15, title: "You are a Wordmaster!",   sub: "Flawless. Every word, first try.",               color: "#4A38A8", bg: "#EFEDFB", border: "#B8B0EC" },
+      { min: 12, title: "You are a Linguist!",      sub: "Sharp instincts and a rich vocabulary.",         color: "#2E7D52", bg: "#E8F5EE", border: "#8ECBA8" },
+      { min: 9,  title: "You are a Word Sleuth!",   sub: "Persistent, methodical, and accurate.",          color: "#8C5E00", bg: "#FDF3DC", border: "#EEC96A" },
+      { min: 6,  title: "You are a Word Scout!",    sub: "A good effort — keep exploring!",               color: "#1B5FA0", bg: "#E4F0FB", border: "#87C0EC" },
+      { min: 0,  title: "You are a Word Wanderer!", sub: "Every expert started somewhere. Try again!",     color: "#5E5E7A", bg: "#F2F0FF", border: "#C4BFF0" },
+    ];
+
+    function getScoreBadge(score) { return SCORE_BADGES.find(b => score >= b.min); }
+
+    /* ── Logo ──────────────────────────────────────────────────── */
+    function Logo({ size = 40 }) {
+      return (
+        <svg width={size} height={size} viewBox="0 0 44 44" fill="none">
+          <rect width="44" height="44" rx="10" fill="#EFEDFB"/>
+          <rect x="7"  y="10" width="12" height="12" rx="3" fill="#8B82DD"/>
+          <rect x="21" y="10" width="12" height="12" rx="3" fill="#B8B0EC"/>
+          <rect x="14" y="24" width="12" height="12" rx="3" fill="#5E54C8"/>
+          <circle cx="19.5" cy="16" r="2" fill="white"/>
+          <circle cx="27"   cy="16" r="2" fill="white"/>
+          <circle cx="20"   cy="30" r="2" fill="white"/>
+        </svg>
+      );
+    }
+
+    /* ── Fireworks ─────────────────────────────────────────────── */
+    function Fireworks({ onDone }) {
+      const canvasRef = useRef(null);
+      useEffect(() => {
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+        const ctx = canvas.getContext("2d");
+        canvas.width  = canvas.offsetWidth;
+        canvas.height = canvas.offsetHeight;
+        const particles = [];
+        const colors = ["#8B82DD","#5EC48A","#F0C040","#5BA8E8","#E87090","#5ED0C0"];
+        for (let b = 0; b < 6; b++) {
+          const x = Math.random() * canvas.width;
+          const y = Math.random() * canvas.height * 0.6;
+          const color = colors[b % colors.length];
+          for (let i = 0; i < 28; i++) {
+            const angle = (Math.PI * 2 / 28) * i;
+            const speed = 2 + Math.random() * 3;
+            particles.push({ x, y, vx: Math.cos(angle)*speed, vy: Math.sin(angle)*speed, alpha: 1, color, r: 2 + Math.random()*2 });
+          }
+        }
+        let frame;
+        function draw() {
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+          particles.forEach(p => {
+            p.x += p.vx; p.y += p.vy; p.vy += 0.06; p.alpha -= 0.018;
+            if (p.alpha <= 0) return;
+            ctx.beginPath();
+            ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
+            ctx.fillStyle = p.color + Math.floor(p.alpha * 255).toString(16).padStart(2, "0");
+            ctx.fill();
+          });
+          if (particles.some(p => p.alpha > 0)) frame = requestAnimationFrame(draw);
+          else onDone && onDone();
+        }
+        frame = requestAnimationFrame(draw);
+        return () => cancelAnimationFrame(frame);
+      }, []);
+      return <canvas ref={canvasRef} style={{position:"absolute", inset:0, width:"100%", height:"100%", pointerEvents:"none", borderRadius:12}} />;
+    }
+
+    /* ── Home screen ───────────────────────────────────────────── */
+    function Home({ onStart }) {
+      const steps = [
+        { icon: "📖", color: "#2E7D52", bg: "#E8F5EE", border: "#8ECBA8", label: "Read the clue",     detail: "Each word comes with a clue. Think carefully — the answer might surprise you!" },
+        { icon: "✏️", color: "#8C5E00", bg: "#FDF3DC", border: "#EEC96A", label: "Guess the words",   detail: "3 attempts per word. A hint unlocks on your 2nd try to help you along." },
+        { icon: "🔗", color: "#4A38A8", bg: "#EFEDFB", border: "#B8B0EC", label: "Discover the link", detail: "All 5 words share a hidden theme — see if you can spot it before it's revealed!" },
+      ];
+      return (
+        <div style={{maxWidth:520, margin:"0 auto", display:"flex", flexDirection:"column"}}>
+          <div style={{background:"#EFEDFB", borderRadius:"0 0 16px 16px", padding:"1.5rem 1.5rem 1.25rem", textAlign:"center", marginBottom:"1rem", border:"0.5px solid #C4BFF0", borderTop:"none"}}>
+            <div style={{display:"flex", justifyContent:"center", marginBottom:"0.6rem"}}><Logo size={44} /></div>
+            <p style={{fontSize:28, fontWeight:500, color:"#2B2475", margin:"0 0 0.2rem", letterSpacing:-1}}>Linkle</p>
+            <p style={{fontSize:13, color:"#6658C8", margin:0}}>Uncover the words. Discover the link.</p>
+          </div>
+
+          <div style={{padding:"0 1rem", display:"flex", flexDirection:"column", gap:"0.75rem"}}>
+            <p style={{fontSize:12, fontWeight:500, color:T.txtSec, textTransform:"uppercase", letterSpacing:0.6}}>How to play</p>
+
+            <div style={{display:"flex", flexDirection:"column", gap:8}}>
+              {steps.map((s, i) => (
+                <div key={i} style={{background:s.bg, border:`0.5px solid ${s.border}`, borderRadius:10, padding:"0.8rem 1rem", display:"flex", alignItems:"flex-start", gap:"0.85rem"}}>
+                  <div style={{fontSize:20, flexShrink:0, marginTop:1}}>{s.icon}</div>
+                  <div>
+                    <p style={{margin:"0 0 0.2rem", fontSize:13, fontWeight:500, color:s.color}}>{s.label}</p>
+                    <p style={{margin:0, fontSize:12, color:s.color, opacity:0.8, lineHeight:1.45}}>{s.detail}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div style={{background:T.bgSec, borderRadius:10, padding:"0.75rem 1rem", display:"flex", justifyContent:"space-between", alignItems:"center", border:`0.5px solid ${T.borSec}`}}>
+              <div>
+                <p style={{margin:"0 0 0.15rem", fontSize:13, fontWeight:500, color:T.txtPri}}>New puzzle every day</p>
+                <p style={{margin:0, fontSize:12, color:T.txtSec}}>Three levels, fresh words every day</p>
+              </div>
+              <div style={{display:"flex", gap:5}}>
+                {[["#E8F5EE","#8ECBA8"],["#FDF3DC","#EEC96A"],["#EFEDFB","#B8B0EC"]].map(([bg,br],i) => (
+                  <div key={i} style={{width:12, height:12, borderRadius:3, background:bg, border:`0.5px solid ${br}`}} />
+                ))}
+              </div>
+            </div>
+
+            <button onClick={onStart} style={{width:"100%", padding:"12px", borderRadius:10, fontSize:15, fontWeight:500, cursor:"pointer", border:"0.5px solid #B8B0EC", background:"#EFEDFB", color:"#4A38A8"}}>
+              Play today's puzzle
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    /* ── Level select ──────────────────────────────────────────── */
+    function LevelSelect({ onSelect, onBack }) {
+      return (
+        <div style={{padding:"2rem 1rem", maxWidth:500, margin:"0 auto"}}>
+          <button onClick={onBack} style={{fontSize:13, color:T.txtSec, background:"none", border:"none", cursor:"pointer", marginBottom:"1.5rem", padding:0}}>← Back</button>
+          <p style={{fontSize:18, fontWeight:500, color:T.txtPri, marginBottom:"0.25rem"}}>Choose your level</p>
+          <p style={{fontSize:14, color:T.txtSec, marginBottom:"1.5rem"}}>Each level has its own words and clues — same challenge, different depth.</p>
+          <div style={{display:"flex", flexDirection:"column", gap:12}}>
+            {LEVELS.map(l => (
+              <button key={l.id} onClick={() => onSelect(l.id)}
+                style={{padding:"1rem 1.25rem", borderRadius:12, border:`0.5px solid ${l.border}`, background:l.bg, cursor:"pointer", textAlign:"left", display:"flex", justifyContent:"space-between", alignItems:"center"}}>
+                <div>
+                  <span style={{fontSize:15, fontWeight:500, color:l.color, display:"block"}}>{l.label}</span>
+                  <span style={{fontSize:13, color:l.color, opacity:0.8}}>{l.desc}</span>
+                </div>
+                <span style={{fontSize:18, color:l.color}}>→</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+    /* ── Word result list (end screen) ─────────────────────────── */
+    function WordResultList({ wordHistory, scores, puzzle }) {
+      const [openIdx, setOpenIdx] = useState(null);
+      return (
+        <div style={{display:"flex", flexDirection:"column", gap:8, marginBottom:"0.5rem"}}>
+          {wordHistory.map((w, i) => {
+            const got = w.result === "correct";
+            const pts = scores[i];
+            let bg, col, br;
+            if (got) {
+              if (pts === 3)      { bg = "#E8F5EE"; col = "#2E7D52"; br = "#8ECBA8"; }
+              else if (pts === 2) { bg = "#FDF3DC"; col = "#8C5E00"; br = "#EEC96A"; }
+              else                { bg = "#EFEDFB"; col = "#4A38A8"; br = "#B8B0EC"; }
+            } else               { bg = "#FDEAEA"; col = "#A33030"; br = "#F0A0A0"; }
+            const lbl = got ? (pts===3 ? "1st try  +3" : pts===2 ? "2nd try  +2" : "3rd try  +1") : "missed  +0";
+            const meaning = puzzle.words[i]?.clue || "";
+            const isOpen  = openIdx === i;
+            return (
+              <div key={i} style={{borderRadius:10, background:bg, border:`0.5px solid ${br}`, overflow:"hidden"}}>
+                <div style={{display:"flex", justifyContent:"space-between", alignItems:"center", padding:"0.75rem 1rem"}}>
+                  <span style={{fontWeight:500, fontSize:15, color:col, letterSpacing:1.5}}>{w.word}</span>
+                  <div style={{display:"flex", alignItems:"center", gap:10}}>
+                    <span style={{fontSize:13, color:col, opacity:0.85}}>{lbl}</span>
+                    <button onClick={() => setOpenIdx(isOpen ? null : i)}
+                      style={{fontSize:11, padding:"2px 8px", borderRadius:20, border:`0.5px solid ${br}`, background:"transparent", color:col, cursor:"pointer", fontWeight:500, opacity:0.8}}>
+                      {isOpen ? "hide" : "meaning"}
+                    </button>
+                  </div>
+                </div>
+                {isOpen && (
+                  <div style={{padding:"0 1rem 0.75rem"}}>
+                    <p style={{margin:0, fontSize:13, color:col, opacity:0.85, lineHeight:1.5, borderTop:`0.5px solid ${br}`, paddingTop:"0.6rem"}}>{meaning}</p>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      );
+    }
+
+    /* ── End screen ────────────────────────────────────────────── */
+    function EndScreen({ puzzle, scores, wordHistory, themeRevealed, level, onPlayAgain }) {
+      const [firing, setFiring] = useState(true);
+      const total = scores.reduce((a, b) => a + b, 0);
+      const max   = puzzle.words.length * 3;
+      const badge = getScoreBadge(total);
+
+      return (
+        <div style={{padding:"1.5rem 1rem", maxWidth:520, margin:"0 auto", position:"relative"}}>
+          {firing && (
+            <div style={{position:"fixed", inset:0, pointerEvents:"none", zIndex:10}}>
+              <Fireworks onDone={() => setFiring(false)} />
+            </div>
+          )}
+
+          <div style={{display:"flex", alignItems:"center", gap:10, marginBottom:"1.5rem"}}>
+            <Logo />
+            <div>
+              <span style={{fontSize:18, fontWeight:500, color:T.txtPri}}>Linkle</span>
+              <p style={{fontSize:12, color:T.txtSec, margin:0}}>Uncover the words. Discover the link.</p>
+            </div>
+          </div>
+
+          <div style={{background:badge.bg, border:`0.5px solid ${badge.border}`, borderRadius:12, padding:"1.25rem", marginBottom:"1.25rem"}}>
+            <p style={{margin:"0 0 0.2rem", fontSize:13, color:badge.color, fontWeight:500, textTransform:"uppercase", letterSpacing:0.5}}>Today's result</p>
+            <p style={{margin:"0 0 0.35rem", fontSize:22, fontWeight:500, color:badge.color}}>{badge.title}</p>
+            <p style={{margin:"0 0 0.75rem", fontSize:13, color:badge.color, opacity:0.85}}>{badge.sub}</p>
+            <div style={{display:"flex", justifyContent:"space-between", alignItems:"center", borderTop:`0.5px solid ${badge.border}`, paddingTop:"0.75rem"}}>
+              <span style={{fontSize:24, fontWeight:500, color:badge.color}}>{total} / {max}</span>
+              <span style={{fontSize:13, color:badge.color, opacity:0.8}}>{level.label}</span>
+            </div>
+          </div>
+
+          <div style={{borderRadius:12, padding:"1.25rem", marginBottom:"1.25rem",
+            background: themeRevealed ? "#EFEDFB" : T.bgSec,
+            border:     themeRevealed ? "0.5px solid #C4BFF0" : `0.5px solid ${T.borSec}`,
+            transition: "background 0.6s, border 0.6s"}}>
+            <p style={{fontSize:12, color: themeRevealed ? "#6658C8" : T.txtSec, margin:"0 0 0.4rem", fontWeight:500, letterSpacing:0.5, textTransform:"uppercase"}}>Today's connection</p>
+            <p style={{fontSize:17, fontWeight:500, color: themeRevealed ? "#2B2475" : T.txtPri, margin:"0 0 0.5rem", fontStyle:"italic"}}>"{puzzle.themeTitle}"</p>
+            {themeRevealed && <p style={{fontSize:14, color:"#6658C8", margin:0, lineHeight:1.6}}>{puzzle.themeReveal}</p>}
+          </div>
+
+          <WordResultList wordHistory={wordHistory} scores={scores} puzzle={puzzle} />
+
+          <button onClick={onPlayAgain}
+            style={{width:"100%", marginTop:"1.25rem", padding:"12px", borderRadius:8, fontSize:15, fontWeight:500, cursor:"pointer", border:`0.5px solid ${T.borSec}`, background:T.bgSec, color:T.txtPri}}>
+            Try a different level
+          </button>
+        </div>
+      );
+    }
+
+    /* ── Main game ─────────────────────────────────────────────── */
+    function Linkle() {
+      const [screen,        setScreen]        = useState("home");
+      const [level,         setLevel]         = useState(null);
+      const [puzzle,        setPuzzle]        = useState(null);
+      const [wordIndex,     setWordIndex]     = useState(0);
+      const [input,         setInput]         = useState("");
+      const [attempts,      setAttempts]      = useState(0);
+      const [showNudge,     setShowNudge]     = useState(false);
+      const [wordResult,    setWordResult]    = useState(null);
+      const [scores,        setScores]        = useState([]);
+      const [allDone,       setAllDone]       = useState(false);
+      const [themeRevealed, setThemeRevealed] = useState(false);
+      const [shake,         setShake]         = useState(false);
+      const [wordHistory,   setWordHistory]   = useState([]);
+      const [wrongGuesses,  setWrongGuesses]  = useState([]);
+      const inputRef = useRef(null);
+
+      useEffect(() => {
+        if (screen === "game" && inputRef.current) inputRef.current.focus();
+      }, [screen, wordIndex, wordResult]);
+
+      function startGame(lvl) {
+        const p = WORD_BANK[lvl][getPuzzleIndex()];
+        setLevel(lvl); setPuzzle(p);
+        setWordIndex(0); setInput(""); setAttempts(0);
+        setShowNudge(false); setWordResult(null);
+        setScores([]); setAllDone(false); setThemeRevealed(false);
+        setWordHistory([]); setWrongGuesses([]);
+        setScreen("game");
+      }
+
+      function handleGuess() {
+        if (!input.trim() || wordResult) return;
+        const guess       = input.trim().toUpperCase();
+        const correct     = puzzle.words[wordIndex].word;
+        const newAttempts = attempts + 1;
+        setAttempts(newAttempts);
+        setInput("");
+        if (guess === correct) {
+          const pts = newAttempts === 1 ? 3 : newAttempts === 2 ? 2 : 1;
+          setScores(s => [...s, pts]);
+          setWordResult("correct");
+          setWordHistory(h => [...h, { word: correct, result: "correct", attempts: newAttempts }]);
+          setWrongGuesses([]);
+        } else {
+          setWrongGuesses(g => [...g, guess]);
+          if (newAttempts === 2) setShowNudge(true);
+          if (newAttempts >= MAX_ATTEMPTS) {
+            setScores(s => [...s, 0]);
+            setWordResult("revealed");
+            setWordHistory(h => [...h, { word: correct, result: "missed", attempts: newAttempts }]);
+            setWrongGuesses([]);
+          } else {
+            setShake(true); setTimeout(() => setShake(false), 500);
+          }
+        }
+      }
+
+      function nextWord() {
+        const next = wordIndex + 1;
+        if (next >= puzzle.words.length) {
+          setAllDone(true);
+          setTimeout(() => setThemeRevealed(true), 700);
+        } else {
+          setWordIndex(next); setInput(""); setAttempts(0);
+          setShowNudge(false); setWordResult(null); setWrongGuesses([]);
+        }
+      }
+
+      const totalScore = () => scores.reduce((a, b) => a + b, 0);
+      const lvlMeta    = LEVELS.find(l => l.id === level);
+
+      if (screen === "home")  return <Home onStart={() => setScreen("level")} />;
+      if (screen === "level") return <LevelSelect onSelect={startGame} onBack={() => setScreen("home")} />;
+      if (!puzzle)            return null;
+      if (allDone)            return <EndScreen puzzle={puzzle} scores={scores} wordHistory={wordHistory} themeRevealed={themeRevealed} level={lvlMeta} onPlayAgain={() => setScreen("level")} />;
+
+      const cw         = puzzle.words[wordIndex];
+      const isLastWord = wordIndex === puzzle.words.length - 1;
+
+      return (
+        <div style={{padding:"1.5rem 1rem", maxWidth:560, margin:"0 auto"}}>
+
+          {/* Header */}
+          <div style={{display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:"1.5rem"}}>
+            <div style={{display:"flex", alignItems:"center", gap:10}}>
+              <Logo />
+              <div>
+                <span style={{fontSize:20, fontWeight:500, color:T.txtPri}}>Linkle</span>
+                <p style={{fontSize:12, color:T.txtSec, margin:0}}>Uncover the words. Discover the link.</p>
+              </div>
+            </div>
+            <span style={{fontSize:12, padding:"3px 10px", borderRadius:20, background:lvlMeta.bg, color:lvlMeta.color, fontWeight:500, border:`0.5px solid ${lvlMeta.border}`}}>
+              {lvlMeta.label}
+            </span>
+          </div>
+
+          {/* Theme strip */}
+          <div style={{background:T.bgSec, borderRadius:8, padding:"0.6rem 1rem", marginBottom:"1.5rem", display:"flex", alignItems:"center", gap:8, border:`0.5px solid ${T.borTer}`}}>
+            <span style={{fontSize:13, color:T.txtSec}}>Today's theme:</span>
+            <span style={{fontSize:14, fontWeight:500, color:T.txtPri, fontStyle:"italic"}}>"{puzzle.themeTitle}"</span>
+          </div>
+
+          {/* Progress bar */}
+          <div style={{display:"flex", gap:6, marginBottom:"1.5rem"}}>
+            {puzzle.words.map((_, i) => {
+              let bg = T.bgSec, border = `0.5px solid ${T.borTer}`;
+              if (i < wordIndex) {
+                bg     = scores[i] > 0 ? "#E8F5EE" : "#FDEAEA";
+                border = scores[i] > 0 ? "0.5px solid #8ECBA8" : "0.5px solid #F0A0A0";
+              } else if (i === wordIndex) {
+                border = `1.5px solid ${T.borPri}`;
+              }
+              return <div key={i} style={{flex:1, height:6, borderRadius:4, background:bg, border}} />;
+            })}
+          </div>
+
+          {/* Word counter + attempts */}
+          <div style={{marginBottom:"0.5rem", display:"flex", justifyContent:"space-between"}}>
+            <span style={{fontSize:13, color:T.txtSec}}>Word {wordIndex+1} of {puzzle.words.length}</span>
+            <span style={{fontSize:13, color:T.txtSec}}>{MAX_ATTEMPTS - attempts} attempt{MAX_ATTEMPTS - attempts !== 1 ? "s" : ""} left</span>
+          </div>
+
+          {/* Clue card */}
+          <div style={{background:T.bgCard, border:`0.5px solid ${T.borTer}`, borderRadius:12, padding:"1.25rem", marginBottom:"1rem"}}>
+            <p style={{fontSize:16, color:T.txtPri, margin:0, lineHeight:1.6}}>{cw.clue}</p>
+            {showNudge && !wordResult && (
+              <p style={{fontSize:14, color:T.txtSec, marginTop:"0.75rem", marginBottom:0, borderTop:`0.5px solid ${T.borTer}`, paddingTop:"0.75rem"}}>
+                Hint: {cw.nudge}
+              </p>
+            )}
+          </div>
+
+          {/* Input or result */}
+          {!wordResult ? (
+            <div style={{display:"flex", gap:8, marginBottom:"0.75rem"}}>
+              <input
+                ref={inputRef}
+                value={input}
+                onChange={e => setInput(e.target.value.toUpperCase())}
+                onKeyDown={e => e.key === "Enter" && handleGuess()}
+                placeholder="Type your answer..."
+                style={{flex:1, fontSize:16, fontWeight:500, letterSpacing:2, padding:"10px 14px", borderRadius:8,
+                  border: shake ? "1.5px solid #E07070" : `0.5px solid ${T.borSec}`,
+                  background: T.bgPri, color: T.txtPri, outline:"none",
+                  animation: shake ? "shake 0.4s" : "none"}}
+              />
+              <button onClick={handleGuess}
+                style={{padding:"10px 20px", borderRadius:8, fontSize:15, fontWeight:500, cursor:"pointer", border:`0.5px solid ${T.borSec}`, background:T.bgSec, color:T.txtPri}}>
+                Check
+              </button>
+            </div>
+          ) : (
+            <div style={{padding:"1rem 1.25rem", borderRadius:12, marginBottom:"0.75rem",
+              background: wordResult === "correct" ? "#E8F5EE" : "#FDEAEA",
+              border:     wordResult === "correct" ? "0.5px solid #8ECBA8" : "0.5px solid #F0A0A0"}}>
+              <p style={{margin:0, fontWeight:500, fontSize:15, color: wordResult === "correct" ? "#2E7D52" : "#A33030"}}>
+                {wordResult === "correct"
+                  ? `Correct! "${cw.word}" — ${attempts===1 ? "First try! +3" : attempts===2 ? "+2" : "+1"}`
+                  : `The word was "${cw.word}".`}
+              </p>
+              <button onClick={nextWord}
+                style={{marginTop:"0.75rem", padding:"8px 18px", borderRadius:8, fontSize:14, cursor:"pointer", border:`0.5px solid ${T.borSec}`, background:T.bgPri, color:T.txtPri, fontWeight:500}}>
+                {isLastWord ? "See results →" : "Next word →"}
+              </button>
+            </div>
+          )}
+
+          {/* Score */}
+          <div style={{display:"flex", justifyContent:"flex-end"}}>
+            <span style={{fontSize:13, color:T.txtSec}}>Score: {totalScore()}</span>
+          </div>
+
+          {/* Wrong guesses */}
+          {wrongGuesses.length > 0 && !wordResult && (
+            <div style={{marginTop:"0.6rem", display:"flex", alignItems:"center", gap:6, flexWrap:"wrap"}}>
+              <span style={{fontSize:11, color:T.txtTer, fontStyle:"italic"}}>guessed:</span>
+              {wrongGuesses.map((g, i) => (
+                <span key={i} style={{fontSize:11, fontStyle:"italic", letterSpacing:0.5, padding:"1px 7px", borderRadius:20, background:T.bgSec, color:T.txtTer, border:`0.5px solid ${T.borTer}`}}>{g}</span>
+              ))}
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById("root")).render(<Linkle />);
+  </script>
+</body>
+</html>
