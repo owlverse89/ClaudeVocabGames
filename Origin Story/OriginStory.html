@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Origin Story</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+body{
+  font-family:'Lato',sans-serif;
+  background:#0B1226;
+  min-height:100vh;
+  display:flex;align-items:center;justify-content:center;
+  padding:20px;
+  color:#F0EAD6;
+  position:relative;overflow-x:hidden;
+}
+/* star field */
+body::before{
+  content:'';position:fixed;inset:0;
+  background:
+    radial-gradient(1px 1px at 15% 20%, rgba(240,180,40,0.6) 0%,transparent 100%),
+    radial-gradient(1px 1px at 75% 10%, rgba(240,180,40,0.4) 0%,transparent 100%),
+    radial-gradient(1px 1px at 40% 70%, rgba(200,220,255,0.5) 0%,transparent 100%),
+    radial-gradient(1px 1px at 90% 55%, rgba(200,220,255,0.4) 0%,transparent 100%),
+    radial-gradient(1px 1px at 60% 30%, rgba(240,180,40,0.5) 0%,transparent 100%),
+    radial-gradient(1px 1px at 25% 80%, rgba(200,220,255,0.3) 0%,transparent 100%),
+    radial-gradient(1px 1px at 85% 85%, rgba(240,180,40,0.4) 0%,transparent 100%),
+    radial-gradient(2px 2px at 50% 15%, rgba(255,255,255,0.3) 0%,transparent 100%);
+  pointer-events:none;z-index:0;
+}
+#app{position:relative;z-index:1;width:100%;max-width:620px}
+
+/* ── GRADE SELECT ── */
+.gs-header{text-align:center;margin-bottom:32px}
+.gs-title{
+  font-family:'Cinzel',serif;font-size:clamp(2em,7vw,3em);
+  color:#F0B429;letter-spacing:2px;text-shadow:0 0 30px rgba(240,180,40,0.4);
+}
+.gs-sub{color:#8FA8C8;font-size:.85em;letter-spacing:3px;text-transform:uppercase;margin-top:6px}
+.gs-date{color:#5A7A9A;font-size:.78em;margin-top:10px;font-style:italic}
+.gs-prompt{
+  font-family:'Crimson Text',serif;font-size:1.15em;
+  color:#B8C8D8;text-align:center;margin-bottom:28px;line-height:1.6;
+}
+.grade-cards{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
+.grade-card{
+  background:#162035;border:1px solid #2A3A55;border-radius:16px;
+  padding:24px 20px 20px;cursor:pointer;transition:transform .2s,box-shadow .2s,border-color .2s;
+  min-width:160px;text-align:center;flex:1;max-width:180px;
+}
+.grade-card:hover{transform:translateY(-5px);box-shadow:0 12px 30px rgba(0,0,0,.4)}
+.gc-emoji{font-size:2em;display:block;margin-bottom:10px}
+.gc-level{font-size:.68em;letter-spacing:2.5px;text-transform:uppercase;opacity:.6;margin-bottom:6px}
+.gc-name{font-family:'Cinzel',serif;font-size:1em;font-weight:600;margin-bottom:5px}
+.gc-tag{font-size:.72em;opacity:.55;font-style:italic}
+.gc-word{
+  margin-top:12px;padding:8px 10px;border-radius:8px;
+  font-family:'Cinzel',serif;font-size:.82em;letter-spacing:1px;
+  background:rgba(255,255,255,.05);border:1px solid;
+}
+
+/* ── HOW TO PLAY ── */
+.how-link{
+  text-align:center;margin-top:22px;
+}
+.ghost-btn{
+  background:none;border:1.5px solid #2A3A55;color:#5A7A9A;
+  border-radius:8px;padding:9px 22px;cursor:pointer;
+  font-family:'Lato',sans-serif;font-size:.84em;letter-spacing:.5px;
+  transition:background .18s,color .18s,border-color .18s;
+}
+.ghost-btn:hover{background:#1C2E45;color:#B8C8D8;border-color:#3A5A7A}
+
+/* ── STORY SCREEN ── */
+.story-header{
+  display:flex;justify-content:space-between;align-items:center;
+  margin-bottom:16px;flex-wrap:wrap;gap:10px;
+}
+.root-badge{
+  background:var(--gc,#F0B429);color:#0B1226;
+  border-radius:8px;padding:6px 16px;
+  font-family:'Cinzel',serif;font-size:.88em;font-weight:700;letter-spacing:1px;
+}
+.grade-badge{
+  background:#162035;border:1px solid #2A3A55;color:#8FA8C8;
+  border-radius:8px;padding:6px 14px;font-size:.78em;
+}
+/* Frame card */
+.frame-card{
+  background:#0F1C35;border:2px solid var(--gc,#F0B429);
+  border-radius:16px;overflow:hidden;
+  box-shadow:0 0 25px rgba(0,0,0,.5), 0 0 0 1px rgba(240,180,40,.08);
+  animation:fadeSlide .35s ease;
+}
+@keyframes fadeSlide{from{opacity:0;transform:translateX(18px)}to{opacity:1;transform:translateX(0)}}
+.frame-era{
+  background:rgba(240,180,40,.08);border-bottom:1px solid rgba(240,180,40,.15);
+  padding:8px 18px;display:flex;justify-content:space-between;align-items:center;
+}
+.era-text{font-size:.72em;letter-spacing:2px;text-transform:uppercase;color:var(--gc,#F0B429);opacity:.8}
+.frame-num{font-size:.7em;color:#4A6A8A;letter-spacing:1px}
+.scene-area{
+  padding:28px 20px 22px;text-align:center;
+  background:var(--scene-bg,rgba(240,160,40,.04));
+}
+.scene-icons{font-size:2.8em;letter-spacing:8px;display:block;margin-bottom:16px;line-height:1}
+.frame-title{
+  font-family:'Cinzel',serif;color:var(--gc,#F0B429);
+  font-size:.82em;letter-spacing:2px;text-transform:uppercase;
+  margin-bottom:14px;opacity:.85;
+}
+.frame-text{
+  font-family:'Crimson Text',serif;font-size:1.18em;
+  color:#D0DDE8;line-height:1.75;text-align:left;
+  max-width:520px;margin:0 auto;
+}
+.frame-text strong{color:var(--gc,#F0B429)}
+.frame-footer{
+  padding:14px 20px;border-top:1px solid rgba(255,255,255,.06);
+  display:flex;justify-content:space-between;align-items:center;
+}
+.frame-dots{display:flex;gap:8px}
+.fdot{width:10px;height:10px;border-radius:50%;background:#1E2E45;border:1.5px solid #2A3A55;transition:all .25s}
+.fdot.active{background:var(--gc,#F0B429);border-color:var(--gc,#F0B429);box-shadow:0 0 8px var(--gc,#F0B429)}
+.advance-hint{font-size:.72em;color:#3A5A7A;letter-spacing:.5px}
+
+/* ── QUESTION SCREEN ── */
+.q-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:8px}
+.q-progress{font-size:.78em;color:#5A7A9A}
+.q-card{background:#0F1C35;border:2px solid var(--gc,#F0B429);border-radius:16px;overflow:hidden;animation:fadeSlide .3s ease}
+.q-type-bar{
+  background:rgba(240,180,40,.08);border-bottom:1px solid rgba(240,180,40,.15);
+  padding:8px 18px;
+}
+.q-type-badge{
+  display:inline-block;background:var(--gc,#F0B429);color:#0B1226;
+  border-radius:4px;padding:2px 10px;font-size:.65em;font-weight:700;letter-spacing:2px;text-transform:uppercase;
+}
+.q-body{padding:22px 20px 20px}
+.q-text{
+  font-family:'Crimson Text',serif;font-size:1.25em;
+  color:#E0EAF4;line-height:1.65;margin-bottom:22px;
+}
+.q-options{display:flex;flex-direction:column;gap:10px}
+.opt-btn{
+  background:#162035;border:1.5px solid #2A3A55;border-radius:10px;
+  padding:13px 18px;cursor:pointer;text-align:left;
+  font-family:'Crimson Text',serif;font-size:1.05em;color:#C0D0E0;
+  transition:background .18s,border-color .18s,color .18s;
+  display:flex;align-items:center;gap:12px;
+}
+.opt-btn:hover:not(:disabled){background:#1C2E45;border-color:#3A5A7A;color:#E0EAF4}
+.opt-btn:disabled{cursor:default}
+.opt-label{
+  font-family:'Cinzel',serif;font-size:.72em;font-weight:700;
+  color:var(--gc,#F0B429);opacity:.7;flex-shrink:0;letter-spacing:1px;
+  width:18px;
+}
+.opt-btn.correct{background:rgba(50,200,100,.12);border-color:#32C864;color:#A0F0B0}
+.opt-btn.correct .opt-label{color:#32C864;opacity:1}
+.opt-btn.wrong{background:rgba(255,60,60,.1);border-color:#FF5050;color:#FFB0B0}
+.opt-btn.wrong .opt-label{color:#FF5050;opacity:1}
+.opt-btn.show-correct{background:rgba(50,200,100,.08);border-color:#32C864;color:#A0F0B0}
+.q-explanation{
+  margin-top:16px;padding:14px 16px;
+  background:rgba(240,180,40,.06);border-left:3px solid var(--gc,#F0B429);
+  border-radius:0 8px 8px 0;
+  font-family:'Crimson Text',serif;font-size:1em;color:#A0B8CC;line-height:1.6;
+  display:none;
+}
+.q-explanation.show{display:block}
+.q-next-row{margin-top:18px;text-align:right}
+.next-btn{
+  background:var(--gc,#F0B429);color:#0B1226;border:none;
+  border-radius:9px;padding:11px 28px;cursor:pointer;
+  font-family:'Cinzel',serif;font-size:.9em;font-weight:700;letter-spacing:1px;
+  transition:opacity .18s,transform .18s;display:none;
+}
+.next-btn:hover{opacity:.88;transform:translateY(-1px)}
+.next-btn.show{display:inline-block}
+/* back link */
+.back-link{
+  margin-top:14px;text-align:center;
+}
+
+/* ── END SCREEN ── */
+.end-card{
+  background:#0F1C35;border:2px solid var(--gc,#F0B429);
+  border-radius:20px;padding:40px 32px;text-align:center;
+  animation:fadeSlide .35s ease;
+}
+.end-trophy{font-size:3.2em;display:block;margin-bottom:14px}
+.end-title{font-family:'Cinzel',serif;font-size:1.9em;color:var(--gc,#F0B429);margin-bottom:6px}
+.end-root-label{font-size:.75em;letter-spacing:2.5px;text-transform:uppercase;color:#5A7A9A;margin-bottom:20px}
+.score-row{display:flex;justify-content:center;gap:10px;margin-bottom:6px}
+.score-pip{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.2em}
+.score-pip.hit{background:rgba(50,200,100,.15);border:2px solid #32C864}
+.score-pip.miss{background:rgba(255,60,60,.1);border:2px solid #FF5050}
+.end-msg{
+  font-family:'Crimson Text',serif;font-size:1.12em;color:#B8C8D8;
+  line-height:1.65;margin:18px 0 22px;
+}
+.divider{width:50px;height:1px;background:#2A3A55;margin:20px auto}
+.also-label{font-size:.7em;letter-spacing:2px;text-transform:uppercase;color:#5A7A9A;margin-bottom:12px}
+.also-chips{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:20px}
+.chip{
+  background:#162035;border:1px solid #2A3A55;border-radius:20px;
+  padding:4px 14px;font-family:'Crimson Text',serif;font-size:.9em;color:#8FA8C8;
+}
+.fact-box{
+  background:rgba(240,180,40,.06);border:1px solid rgba(240,180,40,.2);
+  border-radius:10px;padding:14px 18px;margin-bottom:24px;
+  font-family:'Crimson Text',serif;font-size:.98em;color:#A0B8CC;line-height:1.65;text-align:left;
+}
+.fact-box::before{content:'💡 ';font-size:1em}
+.end-btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+.primary-btn{
+  background:var(--gc,#F0B429);color:#0B1226;border:none;
+  border-radius:10px;padding:13px 28px;cursor:pointer;
+  font-family:'Cinzel',serif;font-size:.9em;font-weight:700;letter-spacing:1px;
+  transition:opacity .18s,transform .18s;
+}
+.primary-btn:hover{opacity:.88;transform:translateY(-2px)}
+
+/* ── HOW TO PLAY MODAL ── */
+.modal-bg{
+  position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:200;
+  display:flex;align-items:center;justify-content:center;padding:20px;
+  backdrop-filter:blur(4px);
+}
+.modal{
+  background:#0F1C35;border:2px solid #2A3A55;border-radius:18px;
+  padding:32px 28px;max-width:440px;width:100%;
+  box-shadow:0 24px 60px rgba(0,0,0,.5);position:relative;
+}
+.modal-close{
+  position:absolute;top:14px;right:16px;background:none;border:none;
+  color:#5A7A9A;font-size:1.2em;cursor:pointer;
+  width:28px;height:28px;display:flex;align-items:center;justify-content:center;
+  border-radius:50%;transition:background .18s;
+}
+.modal-close:hover{background:#1C2E45}
+.modal-title{font-family:'Cinzel',serif;color:#F0B429;font-size:1.5em;margin-bottom:20px}
+.htp-step{display:flex;gap:14px;margin-bottom:18px;align-items:flex-start}
+.htp-icon{font-size:1.5em;flex-shrink:0;width:34px;text-align:center}
+.htp-body strong{display:block;color:#D0DDE8;font-size:.9em;margin-bottom:3px}
+.htp-body p{color:#6A8AA8;font-size:.83em;line-height:1.55}
+.htp-note{
+  margin-top:18px;padding:11px 14px;background:rgba(240,180,40,.07);
+  border-radius:8px;border-left:3px solid #F0B429;
+  font-size:.8em;color:#7A98B8;line-height:1.5;
+}
+
+@media(max-width:420px){
+  .grade-card{min-width:130px;padding:18px 14px 16px}
+  .end-card{padding:28px 18px}
+  .modal{padding:24px 18px}
+}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+// ── WORD BANK ─────────────────────────────────────────────────────────────
+const BANK = {
+6:[
+  {root:"PORT",lang:"Latin",mean:"to carry",
+   fr:[
+    {era:"Ancient Rome, ~200 BCE",icons:"🏛️⚓🛡️",title:"The Root Is Born",
+     txt:"Roman ships filled the Mediterranean carrying spices, silk, and soldiers. To <strong>PORTARE</strong> was to carry — and the <strong>PORTUS</strong>, the harbor, was where everything arrived and departed."},
+    {era:"Medieval Europe, ~1100 CE",icons:"⚓🗺️🏰",title:"The Word Travels",
+     txt:"As Rome faded, its language lived on in merchants' ledgers. <strong>PORT</strong> appeared in French and English as a harbor — a gateway where cargo was <strong>carried</strong> to shore."},
+    {era:"Modern English, Today",icons:"✈️📦🌍",title:"The Word Arrives",
+     txt:"Today PORT hides in plain sight. <strong>Import</strong> (carry in). <strong>Export</strong> (carry out). <strong>Transport</strong>. <strong>Portable</strong>. Even a reporter <strong>carries</strong> news back to you. The root never stopped moving."}
+   ],
+   qs:[
+    {type:"MEANING",q:"If 'im-' means 'into', what does IMPORT mean?",
+     opts:["To carry goods into a country","To produce goods locally","To store goods safely"],ans:0,
+     exp:"Im (into) + port (carry) = to carry INTO a country. Export flips it — ex (out) + port = carry OUT."},
+    {type:"RECOGNITION",q:"Which word does NOT share the PORT (carry) root?",
+     opts:["Transport","Reporter","Comfort"],ans:2,
+     exp:"Comfort = com + fortis (strength) — nothing to carry here. Transport = carry across. Reporter = one who carries news back."}
+   ],
+   fact:"'Portfolio' = folium (leaf/page) + port (carry) — a 500-year-old word for the case that carries your work.",
+   also:["transport","import","export","portable","portfolio","reporter","portage"]},
+
+  {root:"DICT",lang:"Latin",mean:"to say / speak",
+   fr:[
+    {era:"Ancient Rome, ~100 BCE",icons:"🏛️🗣️📜",title:"The Root Is Born",
+     txt:"Roman orators ruled the Forum with their voices. To <strong>DICERE</strong> was to say, to declare, to command. The <strong>DICTATOR</strong> — the most powerful figure in a crisis — was literally 'the one who tells others what to do.'"},
+    {era:"Medieval Europe, ~1200 CE",icons:"📜✍️🕯️",title:"The Word Travels",
+     txt:"Medieval monks took <strong>dictation</strong> — one spoke, another wrote. Official papal pronouncements were called <strong>edicts</strong>: things officially <strong>said</strong>. The root built the entire vocabulary of authority."},
+    {era:"Modern English, Today",icons:"📚💬🔍",title:"The Word Arrives",
+     txt:"Today DICT speaks from everywhere. A <strong>dictionary</strong> collects what words 'say' they mean. To <strong>predict</strong> is to say something before it happens. To <strong>contradict</strong> is to say the opposite."}
+   ],
+   qs:[
+    {type:"TRIVIA",q:"A 'verdict' in court = VERE (truly) + DICT (say). What does it literally mean?",
+     opts:["A true saying — the jury's judgment","A formal written accusation","A signed legal document"],ans:0,
+     exp:"Vere (truly) + dict (say) = 'to truly say.' When a jury delivers a verdict, they are declaring what they believe to be true."},
+    {type:"CONTEXT",q:"The astronomer made a bold ___ that the comet would return in exactly 75 years.",
+     opts:["Prediction","Contradiction","Dictation"],ans:0,
+     exp:"Pre (before) + dict (say) = to say something before it happens. She declared it before the event."}
+   ],
+   fact:"'Addict' = ad (to) + dict — someone 'spoken to' by a compulsion, bound by it. The word originally described those enslaved to a habit.",
+   also:["dictionary","predict","contradict","verdict","edict","indicate","dedicate","abdicate"]},
+
+  {root:"RUPT",lang:"Latin",mean:"to break",
+   fr:[
+    {era:"Ancient Rome, ~79 CE",icons:"🌋💥🏛️",title:"The Root Is Born",
+     txt:"When Vesuvius could hold no more, it <strong>E-RUMPERE</strong> — it broke outward. <strong>RUMPERE</strong> meant to break, to burst, to shatter. The Romans saw breaking everywhere: walls, silence, promises, empires."},
+    {era:"Medieval Europe, ~1300 CE",icons:"⚔️🏰💰",title:"The Word Travels",
+     txt:"Medieval siege engineers designed weapons to <strong>RUPT</strong> castle walls. In politics, a '<strong>corrupt</strong>' official was one whose integrity had been <strong>broken</strong> from within — a permanent stain on a career."},
+    {era:"Modern English, Today",icons:"⚡💔📱",title:"The Word Arrives",
+     txt:"Today RUPT breaks into conversation constantly. <strong>Interrupt</strong> a meeting. <strong>Disrupt</strong> an industry. <strong>Erupt</strong> in applause. Go <strong>bankrupt</strong>. The breaking never stops — and neither does the root."}
+   ],
+   qs:[
+    {type:"CONTEXT",q:"The village had been quiet for centuries before the ancient volcano finally ___.",
+     opts:["Erupted","Disrupted","Corrupted"],ans:0,
+     exp:"E (out) + rupt (break) = to break outward. A volcano erupts when internal pressure finally breaks through the surface."},
+    {type:"RECOGNITION",q:"Which word does NOT come from the Latin root RUPT (to break)?",
+     opts:["Interrupt","Corrupt","Describe"],ans:2,
+     exp:"Describe comes from SCRIB (to write), not RUPT. Interrupt = break between. Corrupt = break completely (cor + rupt)."}
+   ],
+   fact:"'Bankrupt' traces to Italian 'banca rotta' (broken bench). When a medieval trader failed, their market stall was literally smashed as a public signal.",
+   also:["erupt","interrupt","disrupt","corrupt","abrupt","rupture","bankrupt","irruption"]},
+
+  {root:"VIS/VID",lang:"Latin",mean:"to see",
+   fr:[
+    {era:"Ancient Rome, ~50 BCE",icons:"🏛️👁️🦅",title:"The Root Is Born",
+     txt:"Roman lookouts climbed towers to <strong>VIDERE</strong> — to see approaching armies from miles away. Sight was power. The god Jupiter was '<strong>providens</strong>': the all-seeing one watching over Rome from above."},
+    {era:"Medieval Europe, ~1200 CE",icons:"🕍🎨👁️",title:"The Word Travels",
+     txt:"Medieval artists created '<strong>visions</strong>' in stained glass — images that let illiterate people <strong>see</strong> Bible stories. The word '<strong>evident</strong>' entered English to mean something so clear you can practically see it."},
+    {era:"Modern English, Today",icons:"📺💻🎬",title:"The Word Arrives",
+     txt:"Today VIS and VID are everywhere you look. <strong>Video</strong> (Latin: I see). <strong>Television</strong>. <strong>Evidence</strong>. <strong>Invisible</strong>. <strong>Visionary</strong>. <strong>Supervision</strong>. The root watches over an enormous vocabulary."}
+   ],
+   qs:[
+    {type:"MEANING",q:"'Evident' = e + vid (see). Something that is evident is...",
+     opts:["Clearly visible — obvious and plain to see","Carefully hidden from all observers","Barely imaginable, almost impossible"],ans:0,
+     exp:"Evident = e (out) + vid (see) = something that 'shows itself out' clearly. If it's evident, you can practically see the truth."},
+    {type:"TRIVIA",q:"'Television' = TELE (far) + VIS (see). What did the inventors think they were building?",
+     opts:["A device for seeing things from far away","A device for hearing sounds from far away","A device for sending drawings by wire"],ans:0,
+     exp:"Tele (far) + vis (see) = seeing at a distance. The name described exactly what the device did."}
+   ],
+   fact:"'Envy' comes from Latin 'invidere' = to look upon with hostility. Envious eyes see what others have — and resent it.",
+   also:["vision","video","evidence","evident","television","invisible","envy","provide","supervise"]},
+
+  {root:"TERR",lang:"Latin",mean:"earth / land",
+   fr:[
+    {era:"Ancient Rome, ~100 CE",icons:"🗺️🏛️🌍",title:"The Root Is Born",
+     txt:"Roman cartographers drew maps and wrote at the edges: <strong>TERRA INCOGNITA</strong> — unknown land. <strong>TERRA</strong> was the solid earth beneath their feet, the ground that was farmed, conquered, and named."},
+    {era:"Medieval Europe, ~1100 CE",icons:"🏰⚔️🌾",title:"The Word Travels",
+     txt:"Medieval knights held <strong>territory</strong> — land they protected with their lives. Terra traveled through French, giving English '<strong>terrain</strong>' (the shape of the land) and '<strong>terra cotta</strong>' (baked earth)."},
+    {era:"Modern English, Today",icons:"🌍🛸🚀",title:"The Word Arrives",
+     txt:"Today TERR grounds us — and launches us beyond. <strong>Terrestrial</strong> (of the earth). <strong>Extraterrestrial</strong> (from beyond it). <strong>Mediterranean</strong> (the sea in the middle of the earth). <strong>Terra firma</strong>. The root runs under everything."}
+   ],
+   qs:[
+    {type:"CONTEXT",q:"After six months in space, the astronaut knelt and kissed the ground. 'There's nothing like ___ firma,' she said.",
+     opts:["Terra","Terrain","Terror"],ans:0,
+     exp:"Terra firma = solid/firm earth. Astronauts use it literally — real, solid ground after months in weightlessness."},
+    {type:"MEANING",q:"Extra (outside) + terrestrial (of the earth) = extraterrestrial. What does it describe?",
+     opts:["Something from beyond Earth","Something found deep underground","Something at the bottom of the ocean"],ans:0,
+     exp:"Extra (outside/beyond) + terrestri (of earth) = beyond Earth. Extraterrestrial life would come from somewhere other than our planet."}
+   ],
+   fact:"'Mediterranean' = medi (middle) + terra (earth) — Romans called it the sea in the middle of the world, the center of their known universe.",
+   also:["terrain","territory","terrestrial","Mediterranean","terrace","terra cotta","extraterrestrial"]},
+
+  {root:"CRED",lang:"Latin",mean:"to believe / trust",
+   fr:[
+    {era:"Ancient Rome, ~200 BCE",icons:"⚖️🤝💰",title:"The Root Is Born",
+     txt:"Roman merchants traded on trust. <strong>CREDERE</strong> was to believe, to trust, to lend in faith. '<strong>Credit</strong>' first meant: I trust you to pay me back. Without <strong>credere</strong>, Rome's entire economy would have collapsed."},
+    {era:"Medieval Europe, ~1100 CE",icons:"⛪📿🕯️",title:"The Word Travels",
+     txt:"The medieval Church placed <strong>credere</strong> at the heart of faith. A <strong>creed</strong> was a formal statement of belief — from '<strong>CREDO</strong>': I believe. To be 'credulous' was to believe too easily."},
+    {era:"Modern English, Today",icons:"💳🏦🎓",title:"The Word Arrives",
+     txt:"Today CRED still asks: do you believe? <strong>Credit score</strong>. <strong>Credible</strong> witness. <strong>Incredible</strong> discovery. <strong>Credentials</strong> that prove you are trustworthy. The root measures trust in courtrooms, banks, and classrooms."}
+   ],
+   qs:[
+    {type:"TRIVIA",q:"A CREED is a statement of beliefs from the Latin 'CREDO.' What does 'credo' mean?",
+     opts:["I believe","I command","I record"],ans:0,
+     exp:"Credo (Latin) = I believe. It's still used today — a person's credo is their personal statement of what they stand for."},
+    {type:"MEANING",q:"Credentials show you are credible (trustworthy). What are a doctor's credentials?",
+     opts:["Their qualifications — proof they can be trusted","Their personal debt history","Their formal greeting to patients"],ans:0,
+     exp:"Credentials = evidence that makes you credible. A doctor's credentials are the qualifications that prove they can be trusted with your health."}
+   ],
+   fact:"'Miscreant' = mis (wrongly) + credere = one who believes wrongly. It began meaning heretic, then evolved into a general word for a villain.",
+   also:["credit","credible","incredible","creed","credentials","credulous","miscreant","accredit"]}
+],
+7:[
+  {root:"CHRON",lang:"Greek",mean:"time",
+   fr:[
+    {era:"Ancient Greece, ~400 BCE",icons:"⏳🏛️⚡",title:"The Root Is Born",
+     txt:"For the ancient Greeks, <strong>CHRONOS</strong> (χρόνος) was a god — Father Time himself, who devoured his own children. The word meant time as a force: unstoppable, all-consuming, eternal."},
+    {era:"Medieval Europe, ~1200 CE",icons:"📜🕯️🗓️",title:"The Word Travels",
+     txt:"Medieval monks recorded history in '<strong>chronicles</strong>' — accounts arranged in order of time. They understood that without <strong>CHRON</strong>, history was just a pile of facts with no structure or sequence."},
+    {era:"Modern English, Today",icons:"⌚🔄🌍",title:"The Word Arrives",
+     txt:"Today CHRON measures everything. <strong>Chronological</strong> order. <strong>Chronic</strong> illness (lasting a long time). <strong>Synchronize</strong> (same time). <strong>Anachronism</strong> (wrong time). Time is everywhere because CHRON is everywhere."}
+   ],
+   qs:[
+    {type:"CONTEXT",q:"A film set in ancient Egypt showed a character checking a mobile phone. Critics immediately called this a glaring ___.",
+     opts:["Anachronism","Synchronism","Chronology"],ans:0,
+     exp:"Ana (against/back) + chron (time) = something placed against its proper time. A phone in ancient Egypt is against its time — it doesn't belong there."},
+    {type:"MEANING",q:"Synchronize = SYN (together) + CHRON (time). What does it mean to synchronize two things?",
+     opts:["To make them operate at exactly the same time","To record them both accurately","To arrange them in historical order"],ans:0,
+     exp:"Syn (together) + chron (time) = happening TOGETHER in time. Synchronized swimmers must move as one, in perfect unison."}
+   ],
+   fact:"'Chronometer' = an ultra-precise time-measuring device invented for navigation at sea — sailors' lives depended on it being accurate to the second.",
+   also:["chronic","chronicle","synchronize","anachronism","chronological","chronometer","anachrony"]},
+
+  {root:"GEO",lang:"Greek",mean:"earth",
+   fr:[
+    {era:"Ancient Greece, ~500 BCE",icons:"🌍🏛️📐",title:"The Root Is Born",
+     txt:"The ancient Greeks called the earth <strong>GĒ</strong> (γῆ) and imagined her as a goddess, Gaia. Pythagoras was among the first to argue that the earth was a sphere — a <strong>geo-sphere</strong>, held in space."},
+    {era:"Medieval Europe, ~1200 CE",icons:"🗺️📜🏔️",title:"The Word Travels",
+     txt:"Medieval scholars used <strong>GEO</strong> to build academic disciplines. <strong>Geometry</strong> began as land surveying. <strong>Geography</strong> was the mapping of earth's features. The root named any serious study of the world beneath their feet."},
+    {era:"Modern English, Today",icons:"🛰️⛏️💻",title:"The Word Arrives",
+     txt:"Today GEO reaches from your classroom to satellites in orbit. <strong>Geology</strong>. <strong>Geothermal</strong> energy. <strong>Geopolitics</strong>. Even GPS relies on geo-coordinates — your precise position on the surface of the earth."}
+   ],
+   qs:[
+    {type:"TRIVIA",q:"Geometry = GEO (earth) + METRY (measure). What was it originally invented to do?",
+     opts:["Measure land and fields","Draw perfect circles","Study the movement of stars"],ans:0,
+     exp:"Ancient surveyors needed to measure flooded fields after the Nile receded each year. Geometry was born from practical land measurement, then expanded into pure mathematics."},
+    {type:"RECOGNITION",q:"Which of these words does NOT come from the Greek root GEO (earth)?",
+     opts:["Geology","Geothermal","Genealogy"],ans:2,
+     exp:"Genealogy = genea (race/family/birth) + logy (study) — the study of family lineage. Nothing to do with the earth."}
+   ],
+   fact:"'Apogee' = apo (away from) + geo = the point in an orbit farthest from Earth. Used to describe the moon's orbit and satellite trajectories.",
+   also:["geography","geology","geometry","geothermal","geopolitics","apogee","geocentric"]},
+
+  {root:"PHIL",lang:"Greek",mean:"love",
+   fr:[
+    {era:"Ancient Greece, ~350 BCE",icons:"🏛️❤️📚",title:"The Root Is Born",
+     txt:"Ancient Greek had a beautiful concept: <strong>PHILIA</strong> — deep, affectionate love. <strong>PHILOS</strong> meant beloved, dear, loving. Aristotle described three kinds of love; philia was the highest — the love of true friendship."},
+    {era:"Medieval Europe, ~1200 CE",icons:"📜🕍💡",title:"The Word Travels",
+     txt:"Medieval scholars absorbed Greek through Arabic translations. '<strong>Philosophy</strong>' — love of wisdom — became the foundation of all learning. To be a scholar was, by definition, to love knowledge above comfort and ease."},
+    {era:"Modern English, Today",icons:"📚🌍🎵",title:"The Word Arrives",
+     txt:"Today PHIL names what people love. A <strong>bibliophile</strong> loves books. A <strong>philanthropist</strong> loves humanity. An <strong>audiophile</strong> loves sound. <strong>Philadelphia</strong> = brotherly love. The root tells you exactly what someone cares about most."}
+   ],
+   qs:[
+    {type:"MEANING",q:"Philanthropy = PHIL (love) + ANTHROPOS (humanity). A philanthropist is someone who...",
+     opts:["Loves and actively works to help humanity","Studies human behavior scientifically","Is deeply afraid of large crowds"],ans:0,
+     exp:"Philanthropy literally = love of humanity. Philanthropists give their time and money to improve the lives of others."},
+    {type:"CONTEXT",q:"She was such a devoted ___ that she stayed up until 3am finishing a novel she'd only started that afternoon.",
+     opts:["Bibliophile","Philosopher","Philanthropist"],ans:0,
+     exp:"Biblio (book) + phil (love) = a lover of books. A bibliophile might own thousands of them and never feel they have enough."}
+   ],
+   fact:"Philadelphia was named by William Penn in 1682 — he hoped it would be a city of brotherly love and genuine religious tolerance.",
+   also:["philosophy","philanthropist","bibliophile","audiophile","Philadelphia","philharmonic","anglophile"]},
+
+  {root:"GRAPH/GRAM",lang:"Greek",mean:"to write / draw",
+   fr:[
+    {era:"Ancient Greece, ~500 BCE",icons:"🏺✍️🗿",title:"The Root Is Born",
+     txt:"Ancient Greeks scratched their names on pottery, signed their artwork, recorded their laws in stone. <strong>GRAPHEIN</strong> meant to scratch, to write, to draw. Their marks on clay and stone would outlast them by millennia."},
+    {era:"1800s CE",icons:"📸⚡📝",title:"The Word Travels",
+     txt:"In 1839, photography was invented — literally '<strong>writing with light</strong>.' The telegraph followed, sending '<strong>telegrams</strong>': written messages across distances by electrical signal. The root reinvented itself for every new medium."},
+    {era:"Modern English, Today",icons:"📷💬📊",title:"The Word Arrives",
+     txt:"Today GRAPH is everywhere you type, draw, or record. <strong>Photograph</strong>. <strong>Paragraph</strong>. <strong>Autograph</strong>. <strong>Diagram</strong>. <strong>Biography</strong>. Every time you write something down — in any form — you are graphing."}
+   ],
+   qs:[
+    {type:"TRIVIA",q:"Photography = PHOTO (light) + GRAPH (write). It was named this because...",
+     opts:["Early photographs were made by light leaving marks on treated paper — writing with light","Cameras were originally shaped like writing instruments","Photographers wrote captions beneath every image"],ans:0,
+     exp:"Light hit light-sensitive paper and left chemical marks — literally, writing with light. The name perfectly described the process."},
+    {type:"MEANING",q:"A telegram = TELE (far) + GRAM (written thing). What was a telegram?",
+     opts:["A written message sent electrically from far away","A spoken message recorded onto magnetic tape","A hand-delivered letter from overseas"],ans:0,
+     exp:"In the 1800s, the telegraph sent electrical signals decoded into written words. Tele (far) + gram (written thing) = a written message from far away."}
+   ],
+   fact:"Graffiti comes from the same root — Italian 'graffiare' (to scratch/write on walls). Ancient Pompeii was covered in graffiti, much of it surprisingly funny.",
+   also:["photograph","autograph","biography","paragraph","diagram","telegram","geography","graffiti"]},
+
+  {root:"THERM",lang:"Greek",mean:"heat",
+   fr:[
+    {era:"Ancient Greece, ~400 BCE",icons:"🔥🏊🌡️",title:"The Root Is Born",
+     txt:"The Greeks treasured heat. Their public baths were called <strong>THERMAE</strong> — places of warmth and community. <strong>THERME</strong> meant heat, the life-sustaining force that separated the living from the cold and still."},
+    {era:"1714 CE",icons:"🧪🌡️📏",title:"The Word Travels",
+     txt:"In 1714, Gabriel Fahrenheit invented the mercury <strong>thermometer</strong> — a tube that responded to heat. For the first time in history, humans could <strong>measure</strong> heat exactly, rather than merely feeling it."},
+    {era:"Modern English, Today",icons:"🌡️🏠⚡",title:"The Word Arrives",
+     txt:"Today THERM monitors our world. <strong>Thermometer</strong> (measure heat). <strong>Thermostat</strong> (regulate heat). <strong>Thermal</strong> underwear. <strong>Geothermal</strong> energy. <strong>Hypothermia</strong>. Every heating system, weather forecast, and fever check uses this root."}
+   ],
+   qs:[
+    {type:"MEANING",q:"Hypothermia = HYPO (under/below normal) + THERM (heat). What is hypothermia?",
+     opts:["Dangerously low body temperature","An extremely high fever","Overheating of the brain"],ans:0,
+     exp:"Hypo = below/under normal. Hypo + therm = below normal heat. Hypothermia = your body temperature has dropped dangerously below its normal level."},
+    {type:"CONTEXT",q:"The nurse checked the patient's ___ and confirmed the fever had broken — 37 degrees exactly.",
+     opts:["Thermometer","Thermostat","Thermal"],ans:0,
+     exp:"A thermometer measures temperature. A thermostat controls it. Thermo + meter (measure) = an instrument for measuring heat."}
+   ],
+   fact:"A 'thermos' flask was patented in 1904 and named directly from the Greek word for heat — it keeps warmth in or cold in through insulation.",
+   also:["thermometer","thermostat","thermal","hypothermia","geothermal","thermos","thermodynamics"]},
+
+  {root:"HYDR",lang:"Greek",mean:"water",
+   fr:[
+    {era:"Ancient Greece, ~600 BCE",icons:"🌊🐉🏛️",title:"The Root Is Born",
+     txt:"Water was life to the ancient Greeks. <strong>HYDOR</strong> (ὕδωρ) appeared in their myths — the Hydra was a water-serpent that grew two heads when one was cut off. Where there was <strong>hydor</strong>, there was civilization."},
+    {era:"1780s CE",icons:"⚗️💧🔬",title:"The Word Travels",
+     txt:"In 1783, Antoine Lavoisier discovered that burning <strong>hydrogen</strong> produced water. He named it '<strong>water-producer</strong>' — hydor + gen (to produce). Chemistry built a new vocabulary on an ancient root."},
+    {era:"Modern English, Today",icons:"🚒💧⚡",title:"The Word Arrives",
+     txt:"Today HYDR powers cities and saves lives. <strong>Hydroelectric</strong> dams. Fire <strong>hydrants</strong>. <strong>Dehydration</strong> warnings. <strong>Hydraulic</strong> brakes. Water is still everywhere — because <strong>HYDR</strong> is everywhere."}
+   ],
+   qs:[
+    {type:"CONTEXT",q:"The marathon coaches warned: 'Don't ___ — drink water at every station or your muscles will cramp.'",
+     opts:["Dehydrate","Hydrate","Overhydrate"],ans:0,
+     exp:"De (away/remove) + hydr (water) + ate = to remove water from your body. The coaches are warning athletes not to let that happen."},
+    {type:"TRIVIA",q:"Hydrogen = HYDR + GEN (to produce). Why was hydrogen named this?",
+     opts:["It produces water when it burns with oxygen","It is found only inside water molecules","It looks like water when compressed"],ans:0,
+     exp:"When hydrogen burns with oxygen, the product is water (H₂O). Lavoisier named it 'water-producer' in 1783."}
+   ],
+   fact:"The Hydra of Greek mythology — the water serpent that regrew two heads for every one cut off — gave its name to the genus of tiny freshwater creatures called Hydra.",
+   also:["hydrogen","dehydrate","hydrant","hydraulic","hydroelectric","hydrology","hydra","hydroplane"]}
+],
+8:[
+  {root:"CEDE/CESS",lang:"Latin",mean:"to go / yield",
+   fr:[
+    {era:"Ancient Rome, ~100 BCE",icons:"🏛️⚖️👑",title:"The Root Is Born",
+     txt:"In ancient Rome, <strong>CEDERE</strong> meant to go, to yield, to step aside for a greater power. When a Roman general '<strong>conceded</strong>,' he literally stepped back. To yield was an act of enormous political weight."},
+    {era:"Medieval Europe, ~1200 CE",icons:"👑⚔️📜",title:"The Word Travels",
+     txt:"Medieval monarchs argued endlessly over '<strong>succession</strong>' — who would <strong>go next</strong> on the throne. The word '<strong>excess</strong>' entered English through French: going beyond what was permitted or appropriate."},
+    {era:"Modern English, Today",icons:"📉💼⬅️",title:"The Word Arrives",
+     txt:"Today CEDE and CESS move with quiet authority. <strong>Recession</strong> (economy going back). <strong>Precede</strong> (go before). <strong>Succeed</strong> (go after — then: achieve). <strong>Concede</strong> (yield). <strong>Procedure</strong> (what you go through). The root goes everywhere."}
+   ],
+   qs:[
+    {type:"MEANING",q:"Precede = PRE (before) + CEDE (go). So 'precede' means...",
+     opts:["To go or come before something","To go beyond something","To go backwards from something"],ans:0,
+     exp:"Pre (before) + cede (go) = to go before. Tuesday precedes Wednesday. A speech precedes the ceremony. The root simply means to come first."},
+    {type:"CONTEXT",q:"After months of rising unemployment and shrinking output, economists confirmed the country had entered a ___.",
+     opts:["Recession","Procession","Succession"],ans:0,
+     exp:"Re (back) + cess (go) = going BACK. A recession is when economic activity pulls back — growth retreats."}
+   ],
+   fact:"'Succeed' has a fascinating double meaning: to follow (succeed to the throne) AND to achieve — because what follows effort is often victory.",
+   also:["precede","succeed","recession","succession","concede","excess","procedure","intercede","antecedent"]},
+
+  {root:"FRACT/FRAG",lang:"Latin",mean:"to break",
+   fr:[
+    {era:"Ancient Rome, ~100 CE",icons:"🏛️💔⚔️",title:"The Root Is Born",
+     txt:"<strong>FRANGERE</strong> was the Latin verb for breaking — and the Romans found it everywhere. A fractured bone. A fragment of pottery. The word captured the violence of breaking: sudden, irreversible, final."},
+    {era:"Medieval Europe, ~1300 CE",icons:"🔢🎨🪟",title:"The Word Travels",
+     txt:"Medieval mathematicians borrowed <strong>FRACT</strong> to describe breaking a whole number into pieces: a '<strong>fraction</strong>.' Stained glass artists assembled '<strong>fragments</strong>' — precious broken pieces of colored glass — into soaring cathedral windows."},
+    {era:"Modern English, Today",icons:"⚗️🔬🌈",title:"The Word Arrives",
+     txt:"Today FRACT and FRAG break into science, law, and language. <strong>Fracture</strong>. <strong>Fragment</strong>. <strong>Infraction</strong> (a rule-break). <strong>Refraction</strong> (light bending through glass). Even '<strong>fragile</strong>' carries the ghost of breaking."}
+   ],
+   qs:[
+    {type:"MEANING",q:"Infraction = IN (into) + FRACT (break). An infraction is...",
+     opts:["A violation — a breaking of a rule","A break in a mathematical sequence","A type of bone fracture"],ans:0,
+     exp:"In (into) + fract (break) = breaking INTO a rule. A parking infraction = you broke the parking rule. The word focuses on the act of violation."},
+    {type:"CONTEXT",q:"Light ___ as it passes through the glass prism, splitting into a full spectrum of color.",
+     opts:["Refracts","Fragments","Fractures"],ans:0,
+     exp:"Re (again/back) + fract (break) = light 'breaking' as it passes through glass, bending off its original course. Refraction is a breaking of direction."}
+   ],
+   fact:"Fragile, fragment, fraction, fracture, infraction, refraction — all trace to a single Latin word. English broke that word into dozens of pieces, fittingly.",
+   also:["fracture","fragment","fraction","fragile","refraction","infraction","fracking","defragment"]},
+
+  {root:"VERS/VERT",lang:"Latin",mean:"to turn",
+   fr:[
+    {era:"Ancient Rome, ~100 CE",icons:"🏟️🔄🌀",title:"The Root Is Born",
+     txt:"<strong>VERTERE</strong> meant to turn — and Romans saw turning everywhere. The seasons turned. Fortunes turned. At the center of a chariot race, the chariots turned sharply around the <strong>SPINA</strong>. To turn was to change."},
+    {era:"Medieval Europe, ~1200 CE",icons:"⛪🔄📖",title:"The Word Travels",
+     txt:"Medieval scholars poured <strong>vertere</strong> into hundreds of new words. To '<strong>convert</strong>' was to turn completely toward something new. A '<strong>version</strong>' of a text was a turning of it into another language or form."},
+    {era:"Modern English, Today",icons:"🌌🔄💡",title:"The Word Arrives",
+     txt:"Today VERT and VERS turn through language invisibly. <strong>Universe</strong> (turned into one). <strong>Introvert</strong> (turned inward). <strong>Controversy</strong> (turned against). <strong>Versatile</strong> (able to turn many ways). <strong>Advertise</strong> (turn attention toward). The root never stops turning."}
+   ],
+   qs:[
+    {type:"TRIVIA",q:"Universe = UNI (one) + VERSE (turn). How did Romans imagine the universe?",
+     opts:["Everything turning around a single center","One explosion expanding endlessly outward","Stars arranged in one straight line"],ans:0,
+     exp:"Uni (one) + verse (turn) = everything turning around one center. The Romans imagined a geocentric cosmos — everything revolving around Earth."},
+    {type:"MEANING",q:"Introvert = INTRO (inward) + VERT (turn). Which sentence uses it correctly?",
+     opts:["'She was an introvert who recharged best in quiet solitude.'","'He was so introverted that he turned left instead of right.'","'The introvert spoke loudly in every meeting.'"],ans:0,
+     exp:"Introvert = turns energy inward. Introverts recharge alone. Extrovert = extra (outward) + vert = turns energy outward toward people."}
+   ],
+   fact:"'Controversy' = contro (against) + vers = 'a turning against.' When opposing ideas turn on each other, you have controversy.",
+   also:["reverse","convert","universe","introvert","extrovert","versatile","controversy","advertise","invert"]},
+
+  {root:"SENS/SENT",lang:"Latin",mean:"to feel / perceive",
+   fr:[
+    {era:"Ancient Rome, ~50 BCE",icons:"🏛️👂🌿",title:"The Root Is Born",
+     txt:"<strong>SENTIRE</strong> captured something deeply human — to feel, to perceive, to sense. Roman philosophers argued: could you trust your senses? Was sensation the source of knowledge? The question still echoes today in every philosophy classroom."},
+    {era:"Medieval Europe, ~1200 CE",icons:"🏰🌙👁️",title:"The Word Travels",
+     txt:"Medieval '<strong>sentinels</strong>' — guards posted at castle gates — were those who '<strong>felt</strong>' the approach of danger. Their job was entirely sensory: hear the footstep, feel the vibration, detect the threat before it arrived."},
+    {era:"Modern English, Today",icons:"🔬❤️🤝",title:"The Word Arrives",
+     txt:"Today SENS and SENT run through science and emotion alike. <strong>Sensor</strong> technology. <strong>Sensory</strong> processing. <strong>Sensitive</strong> instruments. <strong>Sentimental</strong> memories. <strong>Consensus</strong> (a shared feeling). Even a '<strong>sentence</strong>' is a structured thought or feeling."}
+   ],
+   qs:[
+    {type:"TRIVIA",q:"A sentinel guards a post. The word connects to SENTIRE (to feel) because a sentinel must...",
+     opts:["Detect and feel approaching danger before it arrives","Express their feelings openly to their commander","Feel the cold of the night watch"],ans:0,
+     exp:"Sentire (feel/perceive). A sentinel's entire job was to FEEL the environment — to hear, sense, and detect threats before they materialized."},
+    {type:"MEANING",q:"Consensus = CON (together) + SENSUS (feeling/perception). What is a consensus?",
+     opts:["A shared feeling — general agreement among a group","A feeling of deep collective sadness","A formal written vote on a decision"],ans:0,
+     exp:"Con (together) + sensus (feeling) = feeling TOGETHER. A consensus is when a group perceives or feels the same way about something."}
+   ],
+   fact:"'Presentiment' = pre (before) + sentire = a feeling that something will happen before it does. The gut feeling that turns out to be right.",
+   also:["sense","sensory","sensitive","sentiment","sentimental","consensus","sentinel","dissent","resent"]},
+
+  {root:"GREG",lang:"Latin",mean:"flock / group",
+   fr:[
+    {era:"Ancient Rome, ~200 BCE",icons:"🐑👥🏛️",title:"The Root Is Born",
+     txt:"<strong>GREX</strong> was the Roman word for a flock of sheep, a herd of cattle — and by extension, a crowd of people. Roman shepherds knew that animals and humans shared the same instinct: they gathered, they grouped, they followed."},
+    {era:"Medieval Europe, ~1100 CE",icons:"⛪🕊️🤝",title:"The Word Travels",
+     txt:"Medieval Christians gathered in '<strong>congregations</strong>' — their flock before God. The word held real beauty: to <strong>congregate</strong> was to come together as one body, one community, one living <strong>grex</strong>."},
+    {era:"Modern English, Today",icons:"🌍🔬📊",title:"The Word Arrives",
+     txt:"Today GREG reveals how we think about groups. <strong>Gregarious</strong> (loves the flock). <strong>Congregate</strong> (gather together). <strong>Segregate</strong> (pull apart). <strong>Aggregate</strong> (collect into a group). And <strong>egregious</strong> — which once meant something entirely different."}
+   ],
+   qs:[
+    {type:"TRIVIA",q:"Gregarious means loving social gatherings. From GREX (flock), a gregarious person is like...",
+     opts:["A sheep that thrives in the middle of the flock","A lone wolf who avoids all company","A shepherd watching everything from a distance"],ans:0,
+     exp:"Grex = flock. Gregarious = flock-natured. A gregarious person moves naturally toward groups and company, the way a sheep gravitates to the flock."},
+    {type:"MEANING",q:"Segregate = SE (apart) + GREG (group) + ATE. To segregate means...",
+     opts:["To forcibly separate a group into isolated parts","To carefully gather groups together","To lead a group through a difficult challenge"],ans:0,
+     exp:"Se (apart) + greg (group) = to separate from the group. Segregation divides what was once united."}
+   ],
+   fact:"Egregious once meant OUTSTANDING — e (out of) + greg (flock) = rising above the crowd. Then it flipped completely and now means outrageously bad. Language is strange.",
+   also:["gregarious","congregate","segregate","aggregate","egregious","congregation","disaggregate"]},
+
+  {root:"MISS/MITT",lang:"Latin",mean:"to send",
+   fr:[
+    {era:"Ancient Rome, ~50 BCE",icons:"🏛️📮🏇",title:"The Root Is Born",
+     txt:"<strong>MITTERE</strong> meant to send — to dispatch, to launch, to release. Roman emperors sent <strong>MISSI</strong> (agents) to distant provinces to carry imperial orders. To send was to project power across vast distances."},
+    {era:"Medieval Europe, ~1200 CE",icons:"⛪🌍✉️",title:"The Word Travels",
+     txt:"Medieval popes sent <strong>missionaries</strong> — those '<strong>sent out</strong>' in the name of faith — to every continent. Every letter carried across a sea was an act of <strong>mittere</strong>: something sent, something committed."},
+    {era:"Modern English, Today",icons:"🚀📡💬",title:"The Word Arrives",
+     txt:"Today MISS and MITT send signals everywhere. <strong>Missile</strong> (sent through air). <strong>Transmit</strong> (send across). <strong>Emit</strong> (send out). <strong>Dismiss</strong> (send away). <strong>Commit</strong> (send yourself fully to something). The root launches into everything."}
+   ],
+   qs:[
+    {type:"CONTEXT",q:"After eighteen months of training, the astronauts were cleared for their ___ to the International Space Station.",
+     opts:["Mission","Emission","Permission"],ans:0,
+     exp:"Miss + ion = a sending-out. An astronaut's mission is what they are officially sent to do — their purpose, their dispatched objective."},
+    {type:"MEANING",q:"Emit = E (out) + MIT (send). What does a factory chimney emit?",
+     opts:["It sends out / releases gases into the air","It collects gases from the surrounding air","It converts gases into electrical energy"],ans:0,
+     exp:"E (out) + mit (send) = to send out. Factories emit smoke. Stars emit light. Your phone emits radio waves. The root is about releasing — sending outward."}
+   ],
+   fact:"'Dismiss' = dis (away) + miss = to send away. When class is dismissed, you are literally sent away. When a court dismisses a case, it sends it away permanently.",
+   also:["mission","missile","transmit","emit","dismiss","commit","permit","submit","omit","intermission"]}
+]};
+
+// ── GRADE CONFIG ─────────────────────────────────────────────────────────
+const GRADES = {
+  6:{name:"Root Runners",  emoji:"🌱", tag:"Roots just beginning", col:"#E8943A"},
+  7:{name:"Word Archaeologists", emoji:"🔭", tag:"Digging deeper", col:"#3ABDE8"},
+  8:{name:"Etymology Masters",  emoji:"⚡", tag:"Commanding the roots", col:"#9B6FD4"}
+};
+
+// ── STATE ─────────────────────────────────────────────────────────────────
+let S = {grade:null,root:null,frame:0,qIdx:0,answers:[],answered:false};
+
+// ── DATE SEED ─────────────────────────────────────────────────────────────
+function daysSinceEpoch(){
+  const e=new Date(2024,0,1); e.setHours(0,0,0,0);
+  const t=new Date(); t.setHours(0,0,0,0);
+  return Math.floor((t-e)/86400000);
+}
+function rootForGrade(g){
+  const offsets={6:0,7:3,8:7};
+  const bank=BANK[g];
+  return bank[(daysSinceEpoch()+offsets[g])%bank.length];
+}
+function todayLabel(){
+  return new Date().toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'});
+}
+
+// ── COLOUR HELPER ─────────────────────────────────────────────────────────
+function setCol(c){document.documentElement.style.setProperty('--gc',c)}
+
+// ── RENDER ────────────────────────────────────────────────────────────────
+function show(html){document.getElementById('app').innerHTML=html}
+
+function renderGradeSelect(){
+  const cards=Object.entries(GRADES).map(([g,d])=>{
+    const r=rootForGrade(parseInt(g));
+    return`<div class="grade-card" onclick="pickGrade(${g})" style="border-color:${d.col}33">
+      <span class="gc-emoji">${d.emoji}</span>
+      <div class="gc-level">Grade ${g}</div>
+      <div class="gc-name" style="color:${d.col}">${d.name}</div>
+      <div class="gc-tag">${d.tag}</div>
+      <div class="gc-word" style="color:${d.col};border-color:${d.col}55">Today: ${r.root}</div>
+    </div>`;
+  }).join('');
+  show(`
+    <div class="gs-header">
+      <div class="gs-title">Origin Story</div>
+      <div class="gs-sub">Every word has a past. Discover it.</div>
+      <div class="gs-date">📅 ${todayLabel()}</div>
+    </div>
+    <p class="gs-prompt">Each grade gets a new root every day — three story frames, then a challenge. How well do you know your roots?</p>
+    <div class="grade-cards">${cards}</div>
+    <div class="how-link"><button class="ghost-btn" onclick="showHTP()">📜 &nbsp;How to Play</button></div>
+  `);
+}
+
+function pickGrade(g){
+  S.grade=g; S.root=rootForGrade(g); S.frame=0; S.qIdx=0; S.answers=[]; S.answered=false;
+  setCol(GRADES[g].col);
+  renderFrame();
+}
+
+// ── STORY FRAMES ──────────────────────────────────────────────────────────
+const SCENE_BG=['rgba(240,160,40,0.06)','rgba(180,160,130,0.05)','rgba(60,140,220,0.06)'];
+
+function renderFrame(){
+  const r=S.root, fi=S.frame, f=r.fr[fi], g=S.grade, gc=GRADES[g].col;
+  const dots=[0,1,2].map(i=>`<span class="fdot${i<=fi?' active':''}"></span>`).join('');
+  const isLast=fi===2;
+  show(`
+    <div class="story-header">
+      <div class="root-badge">${r.root} &nbsp;·&nbsp; ${r.lang} &nbsp;·&nbsp; "${r.mean}"</div>
+      <div class="grade-badge">Grade ${g} · ${GRADES[g].name}</div>
+    </div>
+    <div class="frame-card" id="fc" onclick="advanceFrame()">
+      <div class="frame-era">
+        <span class="era-text">${f.era}</span>
+        <span class="frame-num">Frame ${fi+1} of 3</span>
+      </div>
+      <div class="scene-area" style="--scene-bg:${SCENE_BG[fi]}">
+        <span class="scene-icons">${f.icons}</span>
+        <div class="frame-title">${f.title}</div>
+        <div class="frame-text">${f.txt}</div>
+      </div>
+      <div class="frame-footer">
+        <div class="frame-dots">${dots}</div>
+        <span class="advance-hint">${isLast?'Answer awaits →':'Click or press Enter →'}</span>
+      </div>
+    </div>
+    <div class="back-link"><button class="ghost-btn" onclick="goHome()">← Change Grade</button></div>
+  `);
+}
+
+function advanceFrame(){
+  if(S.frame<2){S.frame++;renderFrame();}
+  else{S.qIdx=0;S.answered=false;renderQuestion();}
+}
+
+// ── QUESTIONS ─────────────────────────────────────────────────────────────
+function renderQuestion(){
+  const r=S.root, q=r.qs[S.qIdx], total=r.qs.length, g=S.grade;
+  const opts=q.opts.map((o,i)=>`
+    <button class="opt-btn" id="ob${i}" onclick="pickAnswer(${i})">
+      <span class="opt-label">${['A','B','C'][i]}</span>${o}
+    </button>`).join('');
+  show(`
+    <div class="q-header">
+      <div class="root-badge">${r.root} &nbsp;·&nbsp; ${r.lang}</div>
+      <div class="q-progress" style="color:${GRADES[g].col}">Question ${S.qIdx+1} of ${total}</div>
+    </div>
+    <div class="q-card">
+      <div class="q-type-bar"><span class="q-type-badge">${q.type}</span></div>
+      <div class="q-body">
+        <div class="q-text">${q.q}</div>
+        <div class="q-options">${opts}</div>
+        <div class="q-explanation" id="qexp">${q.exp}</div>
+        <div class="q-next-row">
+          <button class="next-btn" id="nxtbtn" onclick="nextStep()">
+            ${S.qIdx+1<total?'Next Question →':'See Results →'}
+          </button>
+        </div>
+      </div>
+    </div>
+    <div class="back-link"><button class="ghost-btn" onclick="goHome()">← Change Grade</button></div>
+  `);
+}
+
+function pickAnswer(i){
+  if(S.answered)return;
+  S.answered=true;
+  const q=S.root.qs[S.qIdx];
+  const correct=i===q.ans;
+  S.answers.push({chosen:i,correct});
+  // Style buttons
+  for(let b=0;b<3;b++){
+    const el=document.getElementById('ob'+b);
+    if(!el)continue;
+    el.disabled=true;
+    if(b===q.ans)el.classList.add(correct||b!==i?'correct':'show-correct');
+    if(b===i&&!correct)el.classList.add('wrong');
+    if(b===q.ans&&!correct)el.classList.add('show-correct');
+  }
+  document.getElementById('qexp').classList.add('show');
+  document.getElementById('nxtbtn').classList.add('show');
+}
+
+function nextStep(){
+  const r=S.root;
+  if(S.qIdx+1<r.qs.length){S.qIdx++;S.answered=false;renderQuestion();}
+  else{renderEnd();}
+}
+
+// ── END SCREEN ────────────────────────────────────────────────────────────
+function renderEnd(){
+  const r=S.root, g=S.grade, total=r.qs.length;
+  const score=S.answers.filter(a=>a.correct).length;
+  const pips=S.answers.map(a=>`<div class="score-pip ${a.correct?'hit':'miss'}">${a.correct?'✓':'✗'}</div>`).join('');
+  const chips=r.also.map(w=>`<span class="chip">${w}</span>`).join('');
+  const msgs=['Keep exploring — every root you learn unlocks a dozen words.','Good work! The root is taking shape in your mind.','Perfect! You know this root — and now it knows you.'];
+  const msg=score===total?msgs[2]:score===0?msgs[0]:msgs[1];
+  const trophy=score===total?'🏆':score>0?'📖':'🌱';
+  show(`
+    <div class="end-card">
+      <span class="end-trophy">${trophy}</span>
+      <div class="end-title">${score} / ${total} Correct</div>
+      <div class="end-root-label">Grade ${g} · ${GRADES[g].name} · ${r.root}</div>
+      <div class="score-row">${pips}</div>
+      <div class="end-msg">${msg}</div>
+      <div class="divider"></div>
+      <div class="also-label">This root also lives in</div>
+      <div class="also-chips">${chips}</div>
+      <div class="fact-box">${r.fact}</div>
+      <div class="end-btns">
+        <button class="primary-btn" onclick="goHome()">← Return to Grades</button>
+      </div>
+    </div>
+  `);
+}
+
+// ── HOW TO PLAY ───────────────────────────────────────────────────────────
+function showHTP(){
+  const m=document.createElement('div');
+  m.className='modal-bg'; m.id='htpm';
+  m.onclick=function(e){if(e.target===m)m.remove()};
+  m.innerHTML=`
+    <div class="modal">
+      <button class="modal-close" onclick="document.getElementById('htpm').remove()">✕</button>
+      <div class="modal-title">How to Play 📖</div>
+      <div class="htp-step">
+        <span class="htp-icon">🎓</span>
+        <div class="htp-body"><strong>Choose Your Grade</strong><p>Pick Grade 6, 7, or 8. Each grade gets a different root word — and it changes every day, like a daily puzzle.</p></div>
+      </div>
+      <div class="htp-step">
+        <span class="htp-icon">📖</span>
+        <div class="htp-body"><strong>Read the Story</strong><p>Three story frames bring the root to life — where it came from, how it traveled, where it lives today. Click (or press Enter) to advance each frame.</p></div>
+      </div>
+      <div class="htp-step">
+        <span class="htp-icon">🔍</span>
+        <div class="htp-body"><strong>Answer the Questions</strong><p>One or two questions follow — they might be trivia, meaning, context, or word recognition. Use what you just read to reason your way through.</p></div>
+      </div>
+      <div class="htp-step">
+        <span class="htp-icon">🏆</span>
+        <div class="htp-body"><strong>See Your Results</strong><p>Find out your score, see where the root hides in other words, and read a fun fact. Come back tomorrow for a new root!</p></div>
+      </div>
+      <div class="htp-note">💡 The story is the clue — read carefully before answering.</div>
+    </div>`;
+  document.body.appendChild(m);
+}
+
+function goHome(){setCol('#F0B429');renderGradeSelect();}
+
+// ── KEYBOARD ──────────────────────────────────────────────────────────────
+document.addEventListener('keydown',e=>{
+  if(e.key==='Enter'){
+    const fc=document.getElementById('fc');
+    if(fc)advanceFrame();
+  }
+});
+
+// ── INIT ──────────────────────────────────────────────────────────────────
+renderGradeSelect();
+</script>
+</body>
+</html>
