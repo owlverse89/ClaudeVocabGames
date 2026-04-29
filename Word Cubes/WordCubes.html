@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Word Cubes — Grade 8</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0F1117;--sur:#1A1F2E;--card:#242B3D;
+  --acc:#F59E0B;--ok:#10B981;--err:#EF4444;
+  --txt:#E2E8F0;--muted:#94A3B8;--dim:#4B5563;
+  --cs:80px;--ch:40px;
+}
+@media(max-width:560px){:root{--cs:62px;--ch:31px}}
+body{background:var(--bg);color:var(--txt);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;min-height:100vh;display:flex;justify-content:center;padding:16px}
+#app{width:100%;max-width:680px}
+
+/* ── HEADER ── */
+.hdr{display:flex;justify-content:space-between;align-items:center;padding:14px 0 18px;border-bottom:1px solid #1E293B;margin-bottom:22px}
+.game-title{font-size:1.55rem;font-weight:900;color:var(--acc);letter-spacing:-0.5px}
+.game-title em{color:var(--txt);font-style:normal;font-weight:300}
+.grade-tag{font-size:.7rem;color:var(--dim);text-transform:uppercase;letter-spacing:2px;margin-top:2px}
+.timer-display{font-size:2.1rem;font-weight:900;font-variant-numeric:tabular-nums;letter-spacing:2px}
+.timer-display.urgent{color:var(--err);animation:blink 1s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.5}}
+
+/* ── CUBES ── */
+.cubes-wrap{display:flex;justify-content:center;gap:12px;margin-bottom:18px}
+@media(max-width:560px){
+  .cubes-wrap{display:grid;grid-template-columns:repeat(3,var(--cs));gap:10px;justify-content:center}
+}
+.cube-scene{width:var(--cs);height:var(--cs);perspective:420px;flex-shrink:0}
+.cube-inner{
+  width:var(--cs);height:var(--cs);
+  position:relative;transform-style:preserve-3d;
+  transform:rotateX(-15deg) rotateY(12deg);
+}
+.face{
+  position:absolute;width:var(--cs);height:var(--cs);
+  border-radius:9px;border:2px solid rgba(0,0,0,.18);
+  display:flex;align-items:center;justify-content:center;
+  backface-visibility:visible;
+}
+.f-front {transform:translateZ(var(--ch));background:#FEF3C7}
+.f-back  {transform:rotateY(180deg) translateZ(var(--ch));background:#A07010}
+.f-right {transform:rotateY(90deg)  translateZ(var(--ch));background:#EFC040}
+.f-left  {transform:rotateY(-90deg) translateZ(var(--ch));background:#E5B830}
+.f-top   {transform:rotateX(90deg)  translateZ(var(--ch));background:#FFFBEB}
+.f-bottom{transform:rotateX(-90deg) translateZ(var(--ch));background:#C08A18}
+.cube-letter{font-size:2rem;font-weight:900;color:#1A1F2E;line-height:1;user-select:none}
+@media(max-width:560px){.cube-letter{font-size:1.5rem}}
+.cube-letter.ph{color:#C0A030;font-size:1.4rem}
+
+/* ── BUTTONS ── */
+.btn{padding:10px 26px;border-radius:8px;border:none;font-size:.93rem;font-weight:700;cursor:pointer;transition:all .15s;letter-spacing:.3px}
+.btn-acc{background:var(--acc);color:#1A1F2E}.btn-acc:hover{background:#D97706}
+.btn-acc:disabled{background:#374151;color:var(--dim);cursor:not-allowed}
+.btn-ghost{background:#1E293B;color:var(--muted);border:1px solid #334155}
+.btn-ghost:hover{background:#253347;color:var(--txt)}
+.btn-row{display:flex;justify-content:center;gap:12px;margin-bottom:14px}
+
+/* ── INFO BOXES ── */
+.warn-box{background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.3);border-radius:8px;padding:9px 16px;color:var(--acc);font-size:.83rem;text-align:center;margin-bottom:12px}
+.info-box{text-align:center;color:var(--dim);font-size:.83rem;margin-bottom:14px}
+.info-box strong{color:var(--muted)}
+
+/* ── STATS BAR ── */
+.stats-bar{display:flex;justify-content:space-around;background:var(--sur);border-radius:10px;padding:10px 18px;margin-bottom:13px}
+.stat{text-align:center}
+.stat-lbl{font-size:.65rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--dim)}
+.stat-val{font-size:1.25rem;font-weight:900;color:var(--acc)}
+
+/* ── INPUT ── */
+.input-row{display:flex;gap:10px;margin-bottom:6px}
+.word-input{
+  flex:1;background:var(--sur);border:2px solid #334155;border-radius:8px;
+  color:var(--txt);font-size:1.1rem;font-weight:700;padding:10px 16px;
+  text-transform:uppercase;letter-spacing:3px;outline:none;
+  transition:border-color .18s,background .18s;
+}
+.word-input:focus{border-color:var(--acc)}
+.word-input:disabled{opacity:.4;cursor:not-allowed}
+.word-input.f-ok{animation:fok .45s ease}
+.word-input.f-err{animation:ferr .45s ease}
+@keyframes fok{0%,100%{background:var(--sur)}45%{background:rgba(16,185,129,.14);border-color:var(--ok)}}
+@keyframes ferr{0%,100%{background:var(--sur)}45%{background:rgba(239,68,68,.12);border-color:var(--err)}}
+.msg-line{height:20px;font-size:.8rem;margin-bottom:8px;transition:opacity .2s}
+.msg-ok{color:var(--ok)}.msg-err{color:var(--err)}.msg-info{color:var(--muted)}
+
+/* ── FOUND LIST ── */
+.found-header{font-size:.68rem;text-transform:uppercase;letter-spacing:2px;color:var(--dim);margin-bottom:8px}
+.found-list{background:var(--sur);border-radius:10px;padding:10px;max-height:200px;overflow-y:auto}
+.found-list::-webkit-scrollbar{width:4px}
+.found-list::-webkit-scrollbar-thumb{background:#334155;border-radius:2px}
+.found-empty{color:var(--dim);font-size:.82rem;text-align:center;padding:18px 0;font-style:italic}
+.word-item{display:flex;justify-content:space-between;align-items:center;padding:5px 8px;border-radius:5px;animation:wIn .22s ease}
+.word-item:nth-child(odd){background:rgba(255,255,255,.02)}
+@keyframes wIn{from{opacity:0;transform:translateX(-8px)}to{opacity:1;transform:none}}
+.wi-word{font-weight:700;text-transform:uppercase;letter-spacing:1.5px;font-size:.88rem}
+.wi-pts{font-size:.72rem;color:var(--acc);font-weight:700}
+
+/* ── TIMESUP OVERLAY ── */
+.tu-overlay{position:fixed;inset:0;background:rgba(0,0,0,.82);display:flex;align-items:center;justify-content:center;z-index:200;backdrop-filter:blur(5px)}
+.tu-text{font-size:clamp(2.4rem,8vw,4rem);font-weight:900;color:var(--acc);text-align:center;animation:tuPop .4s cubic-bezier(.34,1.56,.64,1)}
+@keyframes tuPop{from{transform:scale(.4);opacity:0}to{transform:scale(1);opacity:1}}
+
+/* ── RESULTS ── */
+.res-card{background:var(--sur);border-radius:16px;padding:26px 22px;animation:fadeUp .35s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.res-hero{text-align:center;padding-bottom:20px;border-bottom:1px solid #2D3748;margin-bottom:22px}
+.res-trophy{font-size:2.4rem;margin-bottom:8px}
+.res-score{font-size:2.6rem;font-weight:900;color:var(--acc)}
+.res-sub{color:var(--muted);font-size:.88rem;margin-top:4px}
+.res-count{font-size:1.05rem;font-weight:700;color:var(--txt);margin-top:6px}
+.sec-title{font-size:.68rem;text-transform:uppercase;letter-spacing:2px;color:var(--dim);margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.sec-title::after{content:'';flex:1;height:1px;background:#2D3748}
+.chips{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:22px}
+.chip{background:var(--card);border-radius:6px;padding:5px 12px;display:flex;align-items:center;gap:8px}
+.chip.best{background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.35)}
+.chip-word{font-weight:700;text-transform:uppercase;letter-spacing:1.5px;font-size:.85rem}
+.chip-pts{font-size:.7rem;color:var(--acc)}
+.chip-badge{font-size:.6rem;background:var(--acc);color:#1A1F2E;border-radius:3px;padding:1px 5px;font-weight:800;letter-spacing:.5px}
+.missed-grp{margin-bottom:14px}
+.missed-len{font-size:.72rem;color:var(--dim);font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px}
+.missed-chips{display:flex;flex-wrap:wrap;gap:5px}
+.mchip{background:var(--bg);border:1px solid #2D3748;border-radius:5px;padding:3px 10px;font-size:.8rem;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;color:var(--dim)}
+.none-msg{color:var(--dim);font-style:italic;font-size:.83rem}
+.pa-row{text-align:center;margin-top:22px;padding-top:18px;border-top:1px solid #2D3748}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+// ── WORD LIST (Grade 8 appropriate, 3-6 letters) ──────────────────────────
+const WORDS = new Set(
+`ace act add age ago aid aim air ale all amp and ant ape apt arc are ark arm art ash ask ate awe axe aye
+bad bag ban bar bat bay bed beg bet bid big bit box boy bud bug bun bus but buy
+cab can cap car cat cod cog cop cow cry cub cup cut
+dab dam day den dew did dig dim dip dog dot dry dub dug dun duo dye
+ear eat egg ego elf elm end era eve eye
+fad fan far fat fed few fig fin fit fix fly fog foe for fry fun fur
+gag gap gas gel gem get gin god got gum gun gut guy gym
+had has hat hay hen her hew hid him hip his hit hog hop hot how hub hue hug hum hut
+ice icy ill imp ink ion ire ivy
+jab jam jar jaw jet jig job jog jot joy jug jut
+keg kid kin kit
+lab lag lap law lay led leg let lid lip lit log low lug
+mad man map mat men met mid mob mop mud mug
+nab nag nap net new nil nip nod nor not now nun
+oak odd off oil old opt orb ore our out owe own
+pad pal pan par pat paw pay pea peg pen per pet pie pig pin pit pod pop pot pry pub pun pup put
+rag ram ran rap rat raw ray red ref rid rig rim rip rob rod rot row rub rug rum run rut rye
+sad sag sap sat saw say sea set sew shy sin sip sir sit ski sky sly sob sod son sow spa sub sue sum sun
+tab tan tap tar tax tea ten tie tin tip toe ton top tow toy try tub tug two
+van vat via vie vow
+war was web wed who wig win wit woe won woo wow
+yam yet yew you yap
+zap zip zoo
+able aced acid acre aged ails aims airs akin also alto amps arch area arms arty atom avid awed bake bale ball balm band bank bare bark barn base bath beak beam bean bear beat beer bell belt best bind bite blot blow blue blur bold bolt bond bone boom bore born boss both bout bowl brag bran bred brim brow buck bulk bull bump burn buzz
+cafe cake call calm came camp cane card care cart case cash cast cave chap chat chin chip chop clan clap claw clay clip clod clue coal coat code coil cola cold colt coma come cone cool cope cord core cork corn cost coup cove cram crew crop crow cube curb cure curl cute cyan
+daft dale damp dare dark dart dash data dawn days daze deal dean debt deck deed deep deer deft desk dial dice died dike dill dime dine ding dirt disc dish disk dive dock dome done doom door dose dove down drab drag dram draw dreg drew drip drop drug drum dual duck dude duel dull dump dunk dupe dust
+each earl earn ease east edge else emit epic even ever evil exam face fact fade fail fair fake fall fame fang farm fate feat feed feel feet fell felt fend fern feud file fill film find fire firm fish fist flag flap flat flaw fled flex flit floe flop flow foam fold folk fond ford fore fork form fort foul four fowl free frog fuel full fume fund furl fuse fuzz
+gain gale game gang gasp gate gawk gaze gear geld gent germ gift gild gill give glee glob glow glue gnaw goat goad gold golf gong gore gown grab gram gray grew grid grim grin grip grit grow grub gulf gull gust
+hack hail hair hall halo halt hand hang hard harm harp hash haul haze head heal heap hear heat heel held helm help herd hide high hill hilt hive hoax hock hold hole holy home hood hook hope horn hose host hour hulk hull hump hung hunk hunt hurl hurt husk hymn
+idle inch into iron isle itch jack jade jail jeer jest jibe jilt jive jolt junk jury just keen kelp kept kiln kind king kite knob know knot
+lace lack laid lain lake lame lamp land lane lard lark lash lass last late lava lawn laze lazy leaf leak lean leap left lend less lied lien lime limb line link lion lisp list live lobe lock loft lone long look loom loop lord lore lose loss loud love luck lull lump lung lurk
+mace made maid mail main mane mark mars mast mate maze meal mean meat melt memo mere mesh mild mill mind mint mire miss mist mode mold molt mood moon moor more moss moth move much mule must mute myth
+nail name near neat neck need nest next nice node noon norm nose note noun numb
+oath odds once open orca oven over pace pack page paid pair pall palm pang park part pass past path pave peak peal peat peel peer pelt perk pest pile pill pink pipe plan plod plot plow plug plum poem poet pole poll pond poor pore pork port pose pout prey prod prop pull pulp pump punt pure push
+rack raft rage rail rain rake ramp rant rasp rate read real reap reed reef reel rein rely rent rest rich ride rile ring rise risk rite road roam roar robe rock rode role roll romp roof room root rope rose ruin rule rune rung ruse rush rust
+safe said sail sake sale sand sane sang sash save scan scar seal seam self sell send sent shed shin ship shop shot show shun shut sick side sigh silk sill silt sink size slab slam slap slim slop slow slug slur snag snap snow soak soap soar sock soil sole song soot sort soul soup sour span spar spin spit spot stab star stem step stew stir stop stub suit sulk sung sunk surf swan swap swat sway swim
+tact tame tang taps task taut team tear tell tend term test text than them then this thud thus tick tide tilt time tire toad told toll tomb tone tool tore torn toss tour town trap trek trip trod true tuck tune turf turn tusk twin
+ugly unit upon urge used vale vane vary veer vest view vile vine void volt vote wade waft wage wail wait wake walk wand wane ward warm warp wart wave wear weep well welt went west wide wild wile will wilt wind wine wing wink wire wise wish wisp wolf word wore work worm worn yarn year yell yore your
+zeal zero zone zoom
+about above acute adept admit after again agile aglow agony agree ahead aisle alarm aloft aloof aloud alone alpha altar alter ample amuse angel anger angle ankle annex antic anvil apart apply apron ardor argue armor aroma arose array ashen aside asset astir atone attic audio audit avert avoid awake award aware awful
+badge badly baked bales balls bangs baron beach beard beast began begin being belle birds bison black blade blame bland blast blaze bleed bless bliss blown board boost braid brake brand brave break breed brick bride brief bring broad broke brook broom broth brown brunt brush build built burst
+cabin candy caned cards cargo carry carve cause cedar chain chair chalk chant chaos charm chart chase cheap cheer chess chest chide child china chive chord chose chunk civic civil claim clamp clank clash clasp class clean clear clerk click cliff climb cling clock close cloud clout clown clump cobra comic coral count craft cramp crane crash crawl craze creak cream creed creep crisp croak crown cruel crumb crush crust crypt curly curve cyber
+daily dairy dance dandy dated daunt dealt death decal decor decry delay dense depot depth drama drape drawl dread dream dress dried drift drill drink drive drool droop drove drown drunk
+eagle early earth eerie eight elbow elder elite ember emote empty endow enter envoy equal erect evade event every exact exalt expel extra
+fable faded faint fairy faith false fancy farce fatal fault feast feint fence feral fever fiber flair flake flame flank flare flash flask flesh flick fling flint flock flood floor floss flout flown fluke flute foggy folly force forge forth forum found frame frank fraud freak freed frond front frost froth froze fruit fully
+gaudy gauze gavel given glade glare glass gleam glide glint gloat gloom gloss glove gnash gnome grace grade grail grain grand grant grasp grate gravy graze greed greet grief gripe groan grope gross grout grown gruel gruff grunt guild guile guise gusto
+haiku haste haven haunt heady heavy hedge heist hence hitch hoard hobby holly honey honor horse hotel hound husky ideal idiom imbue imply inane incur indie infer ingot inlay inset
+knack kneel knife knock knoll known label lance large laser latch later laugh layer leach learn leash least legal lemon level light lingo liver livid logic loopy lunge lunar lusty
+magic manly manor maple marsh match mayor meant meaty medal mercy merge merit metal might miser mocha model moody moral mourn muddy murky naive nasty naval nerve never newly night noble noted novel nudge nurse
+occur ocean olive onset opera order outdo outer paddy pagan paint panda panel panic paper parry parse pasta pasty pause patch perch peril perky phase piano pilot pinch place plain plaid plait plane plank plant plate plaza pleat plied pluck plumb plume plump plunk plush polka posse pouch pound power press price prick prime print prior prism prize probe prone proof prose proud prowl prude prune pulse punch pupil purse
+quest quick quiet quirk quite quota quote rabbi radar raise rally ranch raspy raven reach realm recap recur reign relax repay repel revel rider risky rivet roast rocky rogue rough rouse rowdy royal rugby ruler
+sadly saint salad savor scalp scale scant scare scarf scene scoff scone scoop scope score scorn scout scrap seedy seize sense serve setup seven shade shady shake shale shall shame shape share shark sharp sheen sheer shelf shine shirt shock shore short shout shove shown siege sight silly since sixty skate skill skimp skirt skull slack slain slang slant slate slave sleek sleep sleet slice slide slime slink slope slosh sloth slurp smack small smart smash smear smell smile smite smoke smoky smote snack snare snark sneak snide sniff snort snowy soggy solar south space spare spark spawn speak speck spend spice spill spine spire spite spook sport spout spray spree spunk staid stain stale stalk stall stamp stand stark start stash state stave steed steep steer stern stone stomp store stork storm story stout strap straw stray strip strum stuck study stump stung stunk stunt style suave suite sunny super surge swamp swear sweat sweep swept swipe swoop sword sworn
+tabby taboo talon taper tardy taste taunt teach tease tenor terse thorn three thumb thump tiger tight tinge tipsy tired title today token tonic tough towel trace track trade trail trait tramp trawl tread treat trend trial tribe trick tried troop trout trove truce truly trump trunk trust truth tuber tumor twang twice twist
+ultra unfit unity until upset usher valor vapor vault vigor viper visit visor
+wager waltz watch water weary weave weigh weird whack whale wheat wheel where which while whine whirl white whole wider width wield windy witty woman wordy world worry worst worth wrath wring wrote
+yeoman quest
+absent absurd accent accord across action active actual advise affect afford afraid agreed almost alpine almond always ambush amidst annual answer arcane ardent arouse around astern attain attend avenge
+ballot banish barrel barren battle beacon before behalf belong beside beyond bishop bounce bother branch breach brutal burden butter cactus candid cannon castle cellar chilly choice chrome church circle cipher combat corner cradle crisis damage dancer dangle dapper daring deadly domain donkey double dagger driven during
+easily effort embark empire enable ending entire escape extend fabric fallow famous feline fellow filthy finger finish forest formal freely frozen future fonder frugal
+gallop gambit garden gentry goblin golden govern gravel grudge grumpy
+hamlet handle harden happen hardly hatred health herald hidden hollow honest hunger immune impact infect inject inland insect insist intend invent island joyful kernel kindle kingdom kitten
+landed lately launch lavish leader linear lively lonely lucent margin master medley menace mighty mirror modern modest mortal motive murder muscle museum mutual negate notion number
+oblige obtain offend openly ordeal output outlaw parlor pardon patrol permit pillar pirate planet polite posture potent priest prince prison proper purple
+racial radius rafter raging rather rattle reader recall redeem reflex reform repair repent rescue resort result retire return reveal revolt reward richly riddle ripple robust rotten rustle sadden safely sailor salute sample savage scheme school sector serene settle shadow shower silver simple sinful single sister slogan smooth soothe source speech strait street strict string stripe stroke strong subtle summit sundry sunlit sunset surely system
+talent tamper target tartan tangle tavern temple tender timely tinker tissue toasty tomato torque travel threat throne trough turbid turnip tyrant
+unborn unlike urgent useful vacant vanish velvet vendor versus virtue vision wander warmth wealth wither wonder woeful widely winery wizard zestful`.split(/\s+/).filter(w=>w.length>=3&&w.length<=6)
+);
+
+// ── DICE ─────────────────────────────────────────────────────────────────
+const DICE=[
+  ['A','E','I','O','U','N'],
+  ['A','E','I','R','S','T'],
+  ['A','E','O','L','N','D'],
+  ['S','T','R','N','L','C'],
+  ['H','D','G','M','B','P'],
+  ['F','K','W','Y','V','G'],
+];
+
+// ── STATE ─────────────────────────────────────────────────────────────────
+const REST={x:-15,y:12};
+let S={};
+
+function reset(){
+  S={
+    phase:'shuffle',
+    letters:[],
+    possible:[],
+    possibleByLen:{},
+    found:new Set(),
+    foundList:[],
+    score:0,
+    timeLeft:120,
+    timerStart:null,
+    raf:null,
+    animating:false,
+    shuffled:false,
+    msgT:null,
+  };
+}
+
+// ── UTILS ─────────────────────────────────────────────────────────────────
+function score(len){return{3:1,4:2,5:4,6:8}[len]||0}
+function fmt(s){return`${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`}
+function canMake(word,pool){
+  const p=[...pool];
+  for(const c of word){const i=p.indexOf(c);if(i<0)return false;p.splice(i,1)}
+  return true;
+}
+function calcPossible(letters){
+  const res=[];
+  for(const w of WORDS){
+    if(w.length>letters.length)continue;
+    if(canMake(w.toUpperCase(),[...letters]))res.push(w);
+  }
+  return res;
+}
+function byLen(words){
+  const g={};
+  for(const w of words){(g[w.length]=g[w.length]||[]).push(w)}
+  return g;
+}
+
+// ── CUBE ANIMATION ────────────────────────────────────────────────────────
+function animCube(inner,newLetter,delay){
+  setTimeout(()=>{
+    inner.style.transition='none';
+    inner.style.transform=`rotateX(${REST.x}deg) rotateY(${REST.y}deg)`;
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{
+      const xs=(3+Math.floor(Math.random()*2))*360+REST.x;
+      const ys=(3+Math.floor(Math.random()*2))*360+REST.y;
+      inner.style.transition='transform .88s cubic-bezier(.2,.8,.3,1)';
+      inner.style.transform=`rotateX(${xs}deg) rotateY(${ys}deg)`;
+      setTimeout(()=>{
+        const el=inner.querySelector('.cube-letter');
+        if(el)el.textContent=newLetter;
+      },580);
+      setTimeout(()=>{
+        inner.style.transition='none';
+        inner.style.transform=`rotateX(${REST.x}deg) rotateY(${REST.y}deg)`;
+      },920);
+    }));
+  },delay);
+}
+
+// ── SHUFFLE ───────────────────────────────────────────────────────────────
+function doShuffle(){
+  if(S.animating)return;
+  S.animating=true;
+  const newLetters=DICE.map(d=>d[Math.floor(Math.random()*6)]);
+  DICE.forEach((_,i)=>{
+    const inner=document.getElementById(`ci${i}`);
+    if(inner)animCube(inner,newLetters[i],i*65);
+  });
+  const done=DICE.length*65+970;
+  setTimeout(()=>{
+    S.letters=newLetters;
+    S.possible=calcPossible(newLetters);
+    S.possibleByLen=byLen(S.possible);
+    S.animating=false;
+    S.shuffled=true;
+    updateShuffleInfo();
+  },done);
+}
+
+// ── SHUFFLE UI UPDATE ─────────────────────────────────────────────────────
+function updateShuffleInfo(){
+  const warn=document.getElementById('swarn');
+  const info=document.getElementById('sinfo');
+  const startBtn=document.getElementById('startBtn');
+  const n=S.possible.length;
+  if(warn){
+    if(n<10&&n>0){
+      warn.textContent=`Only ${n} word${n===1?'':'s'} possible with this roll — try reshuffling for a better set.`;
+      warn.style.display='block';
+    } else if(n===0){
+      warn.textContent='No valid words found — please reshuffle.';
+      warn.style.display='block';
+    } else {
+      warn.style.display='none';
+    }
+  }
+  if(info){
+    info.innerHTML=n>0?`<strong>${n}</strong> words possible with these letters`:'';
+  }
+  if(startBtn)startBtn.disabled=(n===0);
+}
+
+// ── TIMER ─────────────────────────────────────────────────────────────────
+function startTimer(){
+  S.timerStart=Date.now();
+  function tick(){
+    const elapsed=Math.floor((Date.now()-S.timerStart)/1000);
+    const left=Math.max(0,120-elapsed);
+    S.timeLeft=left;
+    const el=document.getElementById('timer');
+    if(el){
+      el.textContent=fmt(left);
+      el.className='timer-display'+(left<=30?' urgent':'');
+    }
+    if(left<=0){endGame();return}
+    S.raf=requestAnimationFrame(tick);
+  }
+  S.raf=requestAnimationFrame(tick);
+}
+function stopTimer(){if(S.raf){cancelAnimationFrame(S.raf);S.raf=null}}
+
+// ── SUBMIT WORD ───────────────────────────────────────────────────────────
+function submitWord(){
+  const inp=document.getElementById('winp');
+  if(!inp||inp.disabled)return;
+  const raw=inp.value.trim().toLowerCase();
+  inp.value='';
+  if(!raw)return;
+  let reason='';
+  if(raw.length<3)reason='Too short — minimum 3 letters';
+  else if(raw.length>6)reason='Too long — maximum 6 letters';
+  else if(!canMake(raw.toUpperCase(),[...S.letters]))reason='Letter not in your cubes';
+  else if(!WORDS.has(raw))reason='Not a recognised word';
+  else if(S.found.has(raw))reason='Already found!';
+  if(reason){flash('err');showMsg(reason,'err');return}
+  const pts=score(raw.length);
+  S.found.add(raw);
+  S.foundList.unshift({word:raw,pts});
+  S.score+=pts;
+  flash('ok');
+  showMsg(`+${pts} point${pts!==1?'s':''}!`,'ok');
+  updateGameUI();
+}
+
+function flash(type){
+  const inp=document.getElementById('winp');
+  if(!inp)return;
+  inp.classList.remove('f-ok','f-err');
+  void inp.offsetWidth;
+  inp.classList.add(type==='ok'?'f-ok':'f-err');
+  setTimeout(()=>inp.classList.remove('f-ok','f-err'),500);
+}
+
+function showMsg(text,type){
+  const el=document.getElementById('msgline');
+  if(!el)return;
+  el.textContent=text;
+  el.className=`msg-line msg-${type}`;
+  clearTimeout(S.msgT);
+  S.msgT=setTimeout(()=>{if(el)el.textContent=''},2200);
+}
+
+// ── UPDATE GAME UI (without full re-render) ───────────────────────────────
+function updateGameUI(){
+  const fCount=document.getElementById('fcount');
+  const fScore=document.getElementById('fscore');
+  const fList=document.getElementById('flist');
+  if(fCount)fCount.textContent=`${S.found.size} / ${S.possible.length}`;
+  if(fScore)fScore.textContent=S.score;
+  if(fList){
+    if(S.foundList.length===0){
+      fList.innerHTML='<div class="found-empty">Words you find appear here…</div>';
+    } else {
+      fList.innerHTML=S.foundList.map(e=>`
+        <div class="word-item">
+          <span class="wi-word">${e.word}</span>
+          <span class="wi-pts">+${e.pts}pt${e.pts!==1?'s':''}</span>
+        </div>`).join('');
+    }
+  }
+}
+
+// ── END GAME ──────────────────────────────────────────────────────────────
+function endGame(){
+  stopTimer();
+  S.phase='timesup';
+  const ov=document.createElement('div');
+  ov.className='tu-overlay';
+  ov.innerHTML='<div class="tu-text">⏱ Time\'s Up!</div>';
+  document.body.appendChild(ov);
+  setTimeout(()=>{ov.remove();S.phase='results';renderResults()},1600);
+}
+
+// ── RENDER: SHUFFLE ───────────────────────────────────────────────────────
+function renderShuffle(){
+  const cubes=DICE.map((_,i)=>`
+    <div class="cube-scene">
+      <div class="cube-inner" id="ci${i}">
+        <div class="face f-front"><span class="cube-letter ph">?</span></div>
+        <div class="face f-back"></div><div class="face f-right"></div>
+        <div class="face f-left"></div><div class="face f-top"></div>
+        <div class="face f-bottom"></div>
+      </div>
+    </div>`).join('');
+  document.getElementById('app').innerHTML=`
+    <div class="hdr">
+      <div>
+        <div class="game-title">Word <em>Cubes</em></div>
+        <div class="grade-tag">Grade 8 Edition</div>
+      </div>
+    </div>
+    <div class="cubes-wrap">${cubes}</div>
+    <div class="btn-row">
+      <button class="btn btn-ghost" onclick="doShuffle()">🎲 Shuffle</button>
+      <button class="btn btn-acc" id="startBtn" disabled onclick="startGame()">▶ Start</button>
+    </div>
+    <div class="warn-box" id="swarn" style="display:none"></div>
+    <div class="info-box" id="sinfo">Shuffle the cubes to reveal your letters</div>`;
+}
+
+// ── START GAME ────────────────────────────────────────────────────────────
+function startGame(){
+  if(!S.shuffled||S.possible.length===0)return;
+  S.phase='playing';
+  renderGame();
+  startTimer();
+}
+
+// ── RENDER: GAME ──────────────────────────────────────────────────────────
+function renderGame(){
+  const cubes=DICE.map((_,i)=>`
+    <div class="cube-scene">
+      <div class="cube-inner" id="ci${i}" style="transform:rotateX(${REST.x}deg) rotateY(${REST.y}deg)">
+        <div class="face f-front"><span class="cube-letter">${S.letters[i]||'?'}</span></div>
+        <div class="face f-back"></div><div class="face f-right"></div>
+        <div class="face f-left"></div><div class="face f-top"></div>
+        <div class="face f-bottom"></div>
+      </div>
+    </div>`).join('');
+  document.getElementById('app').innerHTML=`
+    <div class="hdr">
+      <div>
+        <div class="game-title">Word <em>Cubes</em></div>
+        <div class="grade-tag">Grade 8 Edition</div>
+      </div>
+      <div id="timer" class="timer-display">2:00</div>
+    </div>
+    <div class="cubes-wrap">${cubes}</div>
+    <div class="stats-bar">
+      <div class="stat"><div class="stat-lbl">Found</div><div class="stat-val" id="fcount">0 / ${S.possible.length}</div></div>
+      <div class="stat"><div class="stat-lbl">Score</div><div class="stat-val" id="fscore">0</div></div>
+      <div class="stat"><div class="stat-lbl">Letters</div><div class="stat-val" style="font-size:.95rem;letter-spacing:3px">${S.letters.join(' ')}</div></div>
+    </div>
+    <div class="input-row">
+      <input id="winp" class="word-input" type="text" placeholder="TYPE A WORD…" maxlength="6" autocomplete="off" autocorrect="off" spellcheck="false"/>
+      <button class="btn btn-acc" onclick="submitWord()">Submit</button>
+    </div>
+    <div id="msgline" class="msg-line"></div>
+    <div class="found-header">Words Found</div>
+    <div class="found-list" id="flist"><div class="found-empty">Words you find appear here…</div></div>`;
+
+  const inp=document.getElementById('winp');
+  if(inp){
+    inp.focus();
+    inp.addEventListener('keydown',e=>{if(e.key==='Enter')submitWord()});
+  }
+}
+
+// ── RENDER: RESULTS ───────────────────────────────────────────────────────
+function renderResults(){
+  const total=S.possible.length;
+  const found=S.foundList.length;
+  const trophy=found===0?'📖':found===total?'🏆':found>=total/2?'🥈':'🥉';
+
+  // Best word
+  let bestWord=null;
+  if(S.foundList.length>0){
+    bestWord=[...S.foundList].sort((a,b)=>b.pts-a.pts||b.word.length-a.word.length)[0];
+  }
+
+  // Found chips
+  const foundChips=S.foundList.length===0
+    ?'<div class="none-msg">No words found this round.</div>'
+    :S.foundList.map(e=>{
+        const isBest=bestWord&&e.word===bestWord.word;
+        return`<div class="chip${isBest?' best':''}">
+          ${isBest?'<span class="chip-badge">BEST</span>':''}
+          <span class="chip-word">${e.word}</span>
+          <span class="chip-pts">${e.pts}pt${e.pts!==1?'s':''}</span>
+        </div>`;
+      }).join('');
+
+  // Missed words grouped by length (descending)
+  const missedLengths=Object.keys(S.possibleByLen).map(Number).sort((a,b)=>b-a);
+  let missedHTML='';
+  let anyMissed=false;
+  for(const len of missedLengths){
+    const missed=S.possibleByLen[len].filter(w=>!S.found.has(w)).sort();
+    if(missed.length===0)continue;
+    anyMissed=true;
+    const label={3:'3 letters',4:'4 letters',5:'5 letters',6:'6 letters'}[len]||`${len} letters`;
+    missedHTML+=`<div class="missed-grp">
+      <div class="missed-len">${label}</div>
+      <div class="missed-chips">${missed.map(w=>`<span class="mchip">${w}</span>`).join('')}</div>
+    </div>`;
+  }
+  if(!anyMissed)missedHTML='<div class="none-msg">You found them all — perfect round! 🎉</div>';
+
+  document.getElementById('app').innerHTML=`
+    <div class="hdr">
+      <div>
+        <div class="game-title">Word <em>Cubes</em></div>
+        <div class="grade-tag">Grade 8 Edition</div>
+      </div>
+    </div>
+    <div class="res-card">
+      <div class="res-hero">
+        <div class="res-trophy">${trophy}</div>
+        <div class="res-score">${S.score} pts</div>
+        <div class="res-sub">Letters played: <strong style="letter-spacing:2px">${S.letters.join(' ')}</strong></div>
+        <div class="res-count">Found <strong style="color:var(--acc)">${found}</strong> of <strong>${total}</strong> possible words</div>
+      </div>
+
+      <div class="sec-title">Words You Found</div>
+      <div class="chips" style="margin-bottom:24px">${foundChips}</div>
+
+      <div class="sec-title">Words You Missed</div>
+      ${missedHTML}
+
+      <div class="pa-row">
+        <button class="btn btn-acc" style="padding:12px 40px;font-size:1rem" onclick="playAgain()">▶ Play Again</button>
+      </div>
+    </div>`;
+}
+
+// ── PLAY AGAIN ────────────────────────────────────────────────────────────
+function playAgain(){
+  reset();
+  renderShuffle();
+}
+
+// ── INIT ──────────────────────────────────────────────────────────────────
+reset();
+renderShuffle();
+</script>
+</body>
+</html>
