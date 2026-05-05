@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Word Detective</title>
+<link href="https://fonts.googleapis.com/css2?family=Special+Elite&family=Oswald:wght@400;600;700&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#0A0A12;--sur:#13131D;--card:#1C1C2A;
+  --amber:#F5C518;--red:#E63946;--green:#27AE60;
+  --txt:#E8E0D0;--muted:#8A8090;--dim:#2E2C3E;
+  --r:11px;
+}
+body{
+  font-family:'Lato',sans-serif;background:var(--bg);min-height:100vh;
+  display:flex;align-items:center;justify-content:center;
+  padding:20px;color:var(--txt);position:relative;overflow-x:hidden;
+}
+body::before{
+  content:'';position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:
+    radial-gradient(ellipse 130% 50% at 50% 0%,rgba(245,197,24,.06) 0%,transparent 65%),
+    radial-gradient(ellipse 80% 60% at 50% 105%,rgba(0,0,0,.8) 0%,transparent 70%);
+}
+#app{position:relative;z-index:1;width:100%;max-width:580px}
+.screen{display:none}
+.screen.active{display:block}
+
+/* ── GRADE SELECT ── */
+.gs-hero{text-align:center;margin-bottom:32px}
+.gs-badge{font-size:3.6em;display:block;margin-bottom:14px;filter:drop-shadow(0 0 28px rgba(245,197,24,.55))}
+.gs-title{
+  font-family:'Oswald',sans-serif;font-size:clamp(2.2em,9vw,3.5em);
+  font-weight:700;color:var(--amber);letter-spacing:5px;text-transform:uppercase;
+  text-shadow:0 0 60px rgba(245,197,24,.2);
+}
+.gs-sub{font-family:'Oswald',sans-serif;font-size:.7em;letter-spacing:6px;color:var(--muted);text-transform:uppercase;margin-top:6px}
+.gs-rule{width:56px;height:2px;background:linear-gradient(90deg,transparent,var(--amber),transparent);margin:16px auto;opacity:.5}
+.gs-tagline{color:var(--muted);font-size:.9em;line-height:1.65;max-width:380px;margin:0 auto}
+
+.grade-cards{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin:26px 0 20px}
+.grade-card{
+  background:var(--card);border:1px solid var(--dim);border-radius:var(--r);
+  padding:26px 22px;cursor:pointer;flex:1;min-width:158px;max-width:198px;text-align:center;
+  transition:transform .22s,box-shadow .22s,border-color .22s;position:relative;overflow:hidden;
+}
+.grade-card::after{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse at 50% 0%,rgba(245,197,24,.07) 0%,transparent 70%);
+  opacity:0;transition:opacity .22s;
+}
+.grade-card:hover{transform:translateY(-7px);box-shadow:0 20px 44px rgba(0,0,0,.65),0 0 0 1px rgba(245,197,24,.28);border-color:rgba(245,197,24,.35)}
+.grade-card:hover::after{opacity:1}
+.gc-icon{font-size:2.1em;display:block;margin-bottom:12px}
+.gc-level{font-family:'Oswald',sans-serif;font-size:.6em;letter-spacing:3px;color:var(--muted);text-transform:uppercase;margin-bottom:5px}
+.gc-name{font-family:'Oswald',sans-serif;font-size:1.1em;font-weight:600;margin-bottom:4px}
+.gc-rank{font-size:.72em;color:var(--muted);font-style:italic;margin-bottom:14px}
+.gc-preview{font-family:'Special Elite',cursive;font-size:.76em;color:var(--amber);background:rgba(245,197,24,.08);border:1px solid rgba(245,197,24,.18);border-radius:6px;padding:6px 10px;letter-spacing:3px}
+
+.gs-footer{text-align:center}
+.ghost-btn{background:none;border:1.5px solid var(--dim);color:var(--muted);border-radius:8px;padding:9px 22px;cursor:pointer;font-family:'Lato',sans-serif;font-size:.83em;letter-spacing:.5px;transition:all .18s}
+.ghost-btn:hover{background:var(--sur);color:var(--txt);border-color:#524E62}
+
+/* ── HOW TO PLAY ── */
+.how-card{background:var(--card);border:1px solid var(--dim);border-radius:14px;padding:30px 26px;margin-bottom:18px}
+.how-title{font-family:'Oswald',sans-serif;font-size:1.4em;font-weight:700;color:var(--amber);letter-spacing:4px;text-align:center;margin-bottom:4px}
+.how-rule{width:36px;height:2px;background:var(--amber);margin:0 auto 22px;opacity:.45}
+.steps{display:flex;flex-direction:column;gap:15px}
+.step{display:flex;gap:13px;align-items:flex-start}
+.sn{font-family:'Oswald',sans-serif;font-size:1.05em;font-weight:700;color:var(--amber);min-width:24px;padding-top:2px;flex-shrink:0}
+.st{font-size:.88em;color:var(--muted);line-height:1.6}
+.st strong{color:var(--txt)}
+.pts-grid{margin-top:20px;background:rgba(245,197,24,.04);border:1px solid rgba(245,197,24,.12);border-radius:9px;padding:14px 16px;display:flex;flex-direction:column;gap:6px}
+.pt-row{display:flex;justify-content:space-between;align-items:center;font-size:.82em}
+.pt-lbl{color:var(--muted)}
+.pt-val{font-family:'Oswald',sans-serif;font-weight:700;color:var(--amber)}
+.pt-val.red{color:var(--red)}
+.how-back{text-align:center}
+
+/* ── GAME ── */
+.prog-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;gap:8px;flex-wrap:wrap}
+.case-lbl{font-family:'Oswald',sans-serif;font-size:.68em;letter-spacing:3px;color:var(--muted);text-transform:uppercase}
+.dots{display:flex;gap:6px}
+.dot{width:26px;height:4px;border-radius:3px;background:var(--dim);transition:background .3s}
+.dot.active{background:rgba(245,197,24,.45)}
+.dot.done{background:var(--amber)}
+.score-lbl{font-family:'Oswald',sans-serif;font-size:1.05em;font-weight:700;color:var(--amber);letter-spacing:1px}
+
+/* case file */
+.case-file{background:var(--card);border:1px solid var(--dim);border-radius:var(--r);padding:18px 20px 22px;margin-bottom:18px;position:relative;overflow:hidden}
+.case-file::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--amber),rgba(245,197,24,.08))}
+.cf-top{display:flex;justify-content:space-between;align-items:center;padding-bottom:11px;margin-bottom:13px;border-bottom:1px solid var(--dim)}
+.cf-stamp{font-family:'Oswald',sans-serif;font-size:.6em;letter-spacing:4px;color:var(--amber);opacity:.5}
+.cf-id{font-family:'Special Elite',cursive;font-size:.75em;color:#4A4660}
+.mystery-lbl{font-family:'Oswald',sans-serif;font-size:.6em;letter-spacing:3.5px;color:var(--muted);text-transform:uppercase;margin-bottom:9px}
+.mystery-word{
+  font-family:'Special Elite',cursive;font-size:clamp(1.85em,7vw,2.85em);
+  color:var(--amber);letter-spacing:.12em;text-align:center;
+  text-shadow:0 0 40px rgba(245,197,24,.18);line-height:1.25;word-break:break-all;
+}
+
+/* clues section */
+.sec-lbl{font-family:'Oswald',sans-serif;font-size:.6em;letter-spacing:3px;color:var(--muted);text-transform:uppercase;margin-bottom:9px}
+.sec-lbl small{font-size:.85em;opacity:.55;letter-spacing:.5px;margin-left:5px;font-family:'Lato',sans-serif;text-transform:none;font-weight:400}
+.clues-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:20px}
+
+.clue-card{
+  background:var(--sur);border:1px solid var(--dim);border-radius:9px;
+  padding:11px 8px;text-align:center;cursor:pointer;
+  min-height:92px;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  transition:border-color .2s,background .2s,transform .15s;position:relative;
+}
+.clue-card:not(.opened):hover{
+  border-color:rgba(245,197,24,.32);background:rgba(245,197,24,.04);transform:translateY(-3px);
+}
+.clue-card.opened{cursor:default;min-height:auto;padding:10px 9px}
+.cc-front{display:flex;flex-direction:column;align-items:center;gap:7px}
+.cc-lock{font-size:1.2em;opacity:.3}
+.cc-type{font-family:'Oswald',sans-serif;font-size:.58em;letter-spacing:1.8px;color:var(--muted);text-transform:uppercase}
+.cc-back{display:none;width:100%}
+.clue-card.opened .cc-front{display:none}
+.clue-card.opened .cc-back{display:block}
+.cc-ico{font-size:1em;display:block;margin-bottom:5px;opacity:.6;text-align:center}
+.cc-text{font-size:.74em;color:var(--txt);line-height:1.5;text-align:left}
+.cc-emoji{font-size:1.55em;letter-spacing:4px;display:block;text-align:center;line-height:1.6}
+
+/* answers */
+.answers-grid{display:flex;flex-direction:column;gap:7px}
+.ans-btn{
+  background:var(--sur);border:1.5px solid var(--dim);border-radius:9px;
+  padding:13px 16px;text-align:left;cursor:pointer;
+  font-family:'Lato',sans-serif;font-size:.9em;color:var(--txt);
+  display:flex;align-items:center;gap:11px;
+  transition:border-color .16s,background .16s,transform .12s;
+}
+.ans-btn:not(:disabled):hover{border-color:rgba(245,197,24,.32);background:rgba(245,197,24,.04);transform:translateX(4px)}
+.ans-btn:disabled{cursor:default}
+.ans-btn.correct{border-color:var(--green)!important;background:rgba(39,174,96,.1)!important;color:var(--green)!important}
+.ans-btn.wrong{border-color:var(--red)!important;background:rgba(230,57,70,.07)!important;color:var(--red)!important;opacity:.5}
+.ans-letter{font-family:'Oswald',sans-serif;font-size:.85em;font-weight:700;color:var(--amber);min-width:20px;flex-shrink:0}
+.ans-btn.correct .ans-letter{color:var(--green)}
+.ans-btn.wrong .ans-letter{color:var(--red)}
+
+/* ── RESULT OVERLAY ── */
+.overlay{
+  position:fixed;inset:0;background:rgba(8,8,14,.84);
+  backdrop-filter:blur(4px);z-index:300;
+  display:flex;align-items:center;justify-content:center;padding:20px;
+  opacity:0;transition:opacity .3s;pointer-events:none;
+}
+.overlay.show{opacity:1;pointer-events:all}
+.result-card{
+  background:var(--card);border:1px solid var(--dim);border-radius:14px;
+  padding:34px 28px;max-width:390px;width:100%;text-align:center;
+  transform:scale(.91);transition:transform .3s;position:relative;overflow:hidden;
+}
+.result-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--amber),rgba(245,197,24,.1))}
+.overlay.show .result-card{transform:scale(1)}
+.r-stamp{font-family:'Oswald',sans-serif;font-size:1.85em;font-weight:700;letter-spacing:3px;text-transform:uppercase;margin-bottom:7px}
+.r-stamp.ok{color:var(--green);text-shadow:0 0 28px rgba(39,174,96,.35)}
+.r-stamp.fail{color:var(--red);text-shadow:0 0 28px rgba(230,57,70,.35)}
+.r-word{font-family:'Special Elite',cursive;font-size:1.55em;color:var(--amber);letter-spacing:5px;margin-bottom:5px}
+.r-def{font-size:.87em;color:var(--muted);margin-bottom:16px;font-style:italic;line-height:1.5}
+.r-pts{font-family:'Oswald',sans-serif;font-size:1.8em;font-weight:700;margin-bottom:3px}
+.r-pts.ok{color:var(--green)}
+.r-pts.fail{color:var(--red)}
+.r-clues{font-size:.75em;color:#4A4660;margin-bottom:24px}
+.r-next{
+  background:var(--amber);color:#0A0A12;border:none;border-radius:8px;
+  padding:12px 32px;font-family:'Oswald',sans-serif;font-size:.97em;font-weight:700;
+  letter-spacing:2px;cursor:pointer;transition:background .16s,transform .12s;
+}
+.r-next:hover{background:#D4AA10;transform:translateY(-2px)}
+
+/* ── SUMMARY ── */
+.sum-top{text-align:center;margin-bottom:26px}
+.sum-icon{font-size:3.2em;display:block;margin-bottom:10px;filter:drop-shadow(0 0 20px rgba(245,197,24,.45))}
+.sum-rank{font-family:'Oswald',sans-serif;font-size:1.85em;font-weight:700;color:var(--amber);letter-spacing:4px;margin-bottom:4px}
+.sum-score{font-family:'Special Elite',cursive;font-size:1em;color:var(--muted)}
+.sum-rule{width:48px;height:2px;background:var(--amber);margin:14px auto;opacity:.4}
+.case-log{display:flex;flex-direction:column;gap:7px;margin-bottom:22px}
+.log-row{background:var(--card);border:1px solid var(--dim);border-radius:8px;padding:11px 15px;display:flex;align-items:center;gap:8px}
+.log-word{font-family:'Special Elite',cursive;font-size:.84em;color:var(--amber);letter-spacing:2px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.log-clues{font-size:.72em;color:#4A4660;min-width:58px;text-align:right;flex-shrink:0}
+.log-pts{font-family:'Oswald',sans-serif;font-weight:700;font-size:.88em;min-width:50px;text-align:right;flex-shrink:0}
+.log-pts.ok{color:var(--green)}
+.log-pts.fail{color:var(--red)}
+.log-ico{font-size:.9em;flex-shrink:0}
+.sum-actions{display:flex;flex-direction:column;gap:9px}
+.primary-btn{width:100%;background:var(--amber);color:#0A0A12;border:none;border-radius:9px;padding:14px;font-family:'Oswald',sans-serif;font-size:1.05em;font-weight:700;letter-spacing:3px;cursor:pointer;transition:background .16s,transform .12s}
+.primary-btn:hover{background:#D4AA10;transform:translateY(-2px)}
+.secondary-btn{width:100%;background:none;border:1.5px solid var(--dim);color:var(--muted);border-radius:9px;padding:12px;font-family:'Lato',sans-serif;font-size:.88em;cursor:pointer;transition:all .18s}
+.secondary-btn:hover{background:var(--sur);color:var(--txt);border-color:#524E62}
+
+@media(max-width:420px){
+  .mystery-word{font-size:1.7em;letter-spacing:.06em}
+  .clues-row{gap:6px}
+  .cc-text{font-size:.7em}
+  .cc-emoji{font-size:1.3em;letter-spacing:3px}
+  .result-card{padding:28px 20px}
+  .r-stamp{font-size:1.6em}
+}
+</style>
+</head>
+<body>
+<div id="app">
+
+<!-- ── GRADE SELECT ── -->
+<div id="s-grade" class="screen active">
+  <div class="gs-hero">
+    <span class="gs-badge">🕵️</span>
+    <div class="gs-title">WORD DETECTIVE</div>
+    <div class="gs-sub">Vocabulary Investigation Unit</div>
+    <div class="gs-rule"></div>
+    <p class="gs-tagline">A mystery word lands on your desk. Crack its meaning — the fewer clues you need, the sharper the detective.</p>
+  </div>
+  <div class="grade-cards">
+    <div class="grade-card" onclick="startGame('5-6')">
+      <span class="gc-icon">🔎</span>
+      <div class="gc-level">Grade Level</div>
+      <div class="gc-name">GRADES 5–6</div>
+      <div class="gc-rank">Field Agent</div>
+      <div class="gc-preview">TREACHEROUS</div>
+    </div>
+    <div class="grade-card" onclick="startGame('7-8')">
+      <span class="gc-icon">🕵️</span>
+      <div class="gc-level">Grade Level</div>
+      <div class="gc-name">GRADES 7–8</div>
+      <div class="gc-rank">Senior Detective</div>
+      <div class="gc-preview">CLANDESTINE</div>
+    </div>
+  </div>
+  <div class="gs-footer">
+    <button class="ghost-btn" onclick="nav('s-how')">HOW TO PLAY</button>
+  </div>
+</div>
+
+<!-- ── HOW TO PLAY ── -->
+<div id="s-how" class="screen">
+  <div class="how-card">
+    <div class="how-title">HOW TO PLAY</div>
+    <div class="how-rule"></div>
+    <div class="steps">
+      <div class="step"><span class="sn">01</span><span class="st">A <strong>mystery word</strong> appears in your case file. Your mission: determine what it means.</span></div>
+      <div class="step"><span class="sn">02</span><span class="st">Three <strong>evidence cards</strong> are locked — a definition fragment, a context sentence, and emoji cues. Tap any card to reveal it.</span></div>
+      <div class="step"><span class="sn">03</span><span class="st">Select the correct meaning from <strong>four options</strong>. Each clue you open costs <strong>75 points</strong> from your case score.</span></div>
+      <div class="step"><span class="sn">04</span><span class="st">Solve <strong>6 cases</strong> per session. Wrong answers score zero — even if you opened clues.</span></div>
+    </div>
+    <div class="pts-grid">
+      <div class="pt-row"><span class="pt-lbl">No clues — correct</span><span class="pt-val">300 pts</span></div>
+      <div class="pt-row"><span class="pt-lbl">1 clue — correct</span><span class="pt-val">225 pts</span></div>
+      <div class="pt-row"><span class="pt-lbl">2 clues — correct</span><span class="pt-val">150 pts</span></div>
+      <div class="pt-row"><span class="pt-lbl">3 clues — correct</span><span class="pt-val">75 pts</span></div>
+      <div class="pt-row"><span class="pt-lbl">Wrong answer</span><span class="pt-val red">0 pts</span></div>
+    </div>
+  </div>
+  <div class="how-back"><button class="ghost-btn" onclick="nav('s-grade')">← BACK</button></div>
+</div>
+
+<!-- ── GAME ── -->
+<div id="s-game" class="screen">
+  <div class="prog-row">
+    <div class="case-lbl" id="case-lbl">CASE 1 OF 6</div>
+    <div class="dots" id="dots"></div>
+    <div class="score-lbl" id="score-lbl">0 PTS</div>
+  </div>
+  <div class="case-file">
+    <div class="cf-top">
+      <div class="cf-stamp">★ CLASSIFIED ★</div>
+      <div class="cf-id" id="cf-id">CASE-001</div>
+    </div>
+    <div class="mystery-lbl">MYSTERY WORD</div>
+    <div class="mystery-word" id="mystery-word"></div>
+  </div>
+  <div class="sec-lbl">EVIDENCE CARDS <small>tap a card to reveal &bull; each clue −75 pts</small></div>
+  <div class="clues-row" id="clues-row"></div>
+  <div class="sec-lbl">WHAT DOES THIS WORD MEAN?</div>
+  <div class="answers-grid" id="answers-grid"></div>
+</div>
+
+<!-- ── RESULT OVERLAY ── -->
+<div class="overlay" id="overlay">
+  <div class="result-card">
+    <div class="r-stamp" id="r-stamp"></div>
+    <div class="r-word" id="r-word"></div>
+    <div class="r-def" id="r-def"></div>
+    <div class="r-pts" id="r-pts"></div>
+    <div class="r-clues" id="r-clues"></div>
+    <button class="r-next" id="r-next" onclick="advance()"></button>
+  </div>
+</div>
+
+<!-- ── SUMMARY ── -->
+<div id="s-summary" class="screen">
+  <div class="sum-top">
+    <span class="sum-icon" id="sum-icon"></span>
+    <div class="sum-rank" id="sum-rank"></div>
+    <div class="sum-score" id="sum-score"></div>
+    <div class="sum-rule"></div>
+  </div>
+  <div class="case-log" id="case-log"></div>
+  <div class="sum-actions">
+    <button class="primary-btn" onclick="playAgain()">INVESTIGATE AGAIN</button>
+    <button class="secondary-btn" onclick="nav('s-grade')">CHANGE GRADE LEVEL</button>
+  </div>
+</div>
+
+</div><!-- #app -->
+
+<script>
+// ─────────────────────────────────────────────────────────────
+//  WORD DATA
+// ─────────────────────────────────────────────────────────────
+const WORDS = {
+'5-6': [
+  { word:'RELUCTANT',
+    clues:{
+      definition:'Showing resistance or unwillingness to take an action or make an effort...',
+      sentence:'Jake was ___ to try the unusual food, even though everyone insisted it tasted amazing.',
+      emoji:'😬🚶‍♂️↩️'},
+    options:['unwilling or hesitant','extremely eager','deeply upset','very confused'], correct:0 },
+
+  { word:'PECULIAR',
+    clues:{
+      definition:'Different from what is normal or expected; strange, odd, or unusual in character...',
+      sentence:'There was a ___ smell drifting from the lab — like burnt rubber mixed with lemons.',
+      emoji:'🤔❓🌀'},
+    options:['strange or unusual','very familiar','quite ordinary','deeply frightening'], correct:0 },
+
+  { word:'CUNNING',
+    clues:{
+      definition:'Having skill at achieving goals through clever or indirect methods; craftily shrewd...',
+      sentence:'The fox in the story was ___ enough to trick the crow into dropping its cheese.',
+      emoji:'🦊😏🧠'},
+    options:['clever and crafty','loud and bold','slow and careful','kind and gentle'], correct:0 },
+
+  { word:'VIVID',
+    clues:{
+      definition:'Producing powerful feelings or strong clear images in the mind; intensely bright...',
+      sentence:'She painted a ___ picture of the sunset — the sky looked as if it were on fire.',
+      emoji:'🌈✨🎨'},
+    options:['bright and striking','dull and faded','large and heavy','soft and quiet'], correct:0 },
+
+  { word:'ABUNDANT',
+    clues:{
+      definition:'Present in large quantities; more than enough; plentiful and overflowing...',
+      sentence:'After the heavy rain, the garden had an ___ supply of water for the whole month.',
+      emoji:'🌊📦🌿'},
+    options:['plentiful or overflowing','barely enough','carefully rationed','completely missing'], correct:0 },
+
+  { word:'DISMAY',
+    clues:{
+      definition:'A feeling of distress or shock caused by something unexpected or unwelcome...',
+      sentence:'To his ___, he discovered that his homework had been left at home on exam day.',
+      emoji:'😱💔😧'},
+    options:['shock and distress','joy and excitement','calm and peace','deep curiosity'], correct:0 },
+
+  { word:'BAFFLED',
+    clues:{
+      definition:'Completely unable to understand or explain something; thoroughly puzzled...',
+      sentence:'The detective was ___ by the clue — it simply made no sense at all.',
+      emoji:'🤯❓🔄'},
+    options:['totally confused','slightly annoyed','very focused','mildly bored'], correct:0 },
+
+  { word:'OMINOUS',
+    clues:{
+      definition:'Giving the impression that something bad or dangerous is about to happen...',
+      sentence:'Dark, ___ clouds gathered over the mountains just before the storm struck the valley.',
+      emoji:'⛈️😰🚨'},
+    options:['threatening or alarming','cheerful and bright','calm and soothing','small and harmless'], correct:0 },
+
+  { word:'PERSEVERE',
+    clues:{
+      definition:'To continue in a course of action even when it is difficult or progress is slow...',
+      sentence:'Even when the training was painful, she chose to ___ and finished the race.',
+      emoji:'💪🏃‍♀️🏆'},
+    options:['keep going despite difficulty','give up easily','move very slowly','ask for help immediately'], correct:0 },
+
+  { word:'COMPASSION',
+    clues:{
+      definition:'A feeling of sympathy and concern for the suffering or troubles of others...',
+      sentence:'The nurse showed great ___ by sitting with the frightened child throughout the night.',
+      emoji:'🤗❤️🩹'},
+    options:["concern for others' pain",'strict rule-following','great personal skill','strong disagreement'], correct:0 },
+
+  { word:'SERENE',
+    clues:{
+      definition:'Calm, peaceful, and untroubled; without any disturbance or anxiety...',
+      sentence:'The lake at dawn was ___ — not a ripple on the water, not a sound in the air.',
+      emoji:'🌅😌🕊️'},
+    options:['calm and peaceful','wild and stormy','busy and crowded','dark and frightening'], correct:0 },
+
+  { word:'ELABORATE',
+    clues:{
+      definition:'Involving many carefully arranged parts or details; highly complex and intricate...',
+      sentence:'The students built an ___ model of the solar system with moving parts and glowing lights.',
+      emoji:'🔧🎭🔬'},
+    options:['detailed and complex','simple and plain','quick and careless','broken and useless'], correct:0 },
+
+  { word:'HOSTILE',
+    clues:{
+      definition:'Showing or feeling strong opposition, unfriendliness, or aggression toward someone...',
+      sentence:'The new student felt ___ stares from the group when she sat down at their lunch table.',
+      emoji:'😠👀⚡'},
+    options:['unfriendly or aggressive','warm and welcoming','shy and quiet','playful and teasing'], correct:0 },
+
+  { word:'DEFIANT',
+    clues:{
+      definition:'Showing bold resistance or open disobedience toward authority or expectation...',
+      sentence:'Despite repeated warnings, the ___ student kept talking throughout the silent exam.',
+      emoji:'✊😤🚫'},
+    options:['boldly disobedient','quietly obedient','deeply afraid','happily agreeable'], correct:0 },
+
+  { word:'TREACHEROUS',
+    clues:{
+      definition:'Guilty of betrayal or deception; appearing safe but concealing serious danger...',
+      sentence:'The mountain path was ___ after the ice storm — one wrong step could have been fatal.',
+      emoji:'🗡️⚠️🧊'},
+    options:['dangerous and untrustworthy','safe and reliable','long and tedious','straight and easy'], correct:0 }
+],
+
+'7-8': [
+  { word:'ALLEVIATE',
+    clues:{
+      definition:'To make a problem, pain, or difficulty less severe or easier to bear...',
+      sentence:'The doctor prescribed medication to ___ the patient\'s pain after the surgery.',
+      emoji:'💊😌⬇️'},
+    options:['lessen or reduce','worsen or increase','observe and record','ignore completely'], correct:0 },
+
+  { word:'AMBIGUOUS',
+    clues:{
+      definition:'Open to more than one interpretation; not having one clear or definite meaning...',
+      sentence:'The film\'s ending was deliberately ___ — audiences debated its meaning for weeks.',
+      emoji:'❓🔀🤔'},
+    options:['having unclear meaning','perfectly straightforward','factually incorrect','unusually detailed'], correct:0 },
+
+  { word:'TENACIOUS',
+    clues:{
+      definition:'Keeping a very firm hold; extremely determined and persistent despite setbacks...',
+      sentence:'Despite years of rejection, the ___ inventor kept refining her design until it worked.',
+      emoji:'🦈💪🔗'},
+    options:['stubbornly determined','easily discouraged','quickly distracted','quietly withdrawn'], correct:0 },
+
+  { word:'CLANDESTINE',
+    clues:{
+      definition:'Done in a secret or hidden way, especially to avoid detection or disapproval...',
+      sentence:'The agents arranged a ___ meeting in a crowded café to exchange classified information.',
+      emoji:'🕵️🤫🌑'},
+    options:['secret and hidden','open and public','loudly celebrated','transparent and slow'], correct:0 },
+
+  { word:'CORROBORATE',
+    clues:{
+      definition:'To confirm or give supporting evidence for a statement, theory, or claim...',
+      sentence:'A new witness came forward to ___ the defendant\'s alibi with crucial evidence.',
+      emoji:'✅📋🤝'},
+    options:['confirm or support','contradict or deny','confuse or mislead','ignore or dismiss'], correct:0 },
+
+  { word:'ELOQUENT',
+    clues:{
+      definition:'Fluent and persuasive in speaking or writing; expressing ideas in a vivid, clear way...',
+      sentence:'Her ___ speech moved the entire audience to stand and applaud for several minutes.',
+      emoji:'🎤✨💬'},
+    options:['fluent and persuasive','hesitant and unclear','harsh and blunt','brief and dull'], correct:0 },
+
+  { word:'INDIGNANT',
+    clues:{
+      definition:'Feeling or showing anger or annoyance at something perceived as unfair or insulting...',
+      sentence:'He was ___ when he discovered that someone else had taken full credit for his research.',
+      emoji:'😤⚖️🔥'},
+    options:['angry at unfairness','pleased with results','deeply embarrassed','quietly resigned'], correct:0 },
+
+  { word:'METICULOUS',
+    clues:{
+      definition:'Showing great attention to detail; very careful and precise even about small things...',
+      sentence:'The ___ editor caught every typo, including the ones buried in the footnotes.',
+      emoji:'🔍📝✅'},
+    options:['extremely careful and precise','sloppy and careless','quick and impatient','bold and reckless'], correct:0 },
+
+  { word:'NONCHALANT',
+    clues:{
+      definition:'Feeling or appearing casually calm and relaxed; not showing concern or anxiety...',
+      sentence:'She seemed ___ about the final exam — as though it were just another ordinary Tuesday.',
+      emoji:'😎🤷‍♂️☕'},
+    options:['casually unconcerned','extremely anxious','deeply focused','visibly excited'], correct:0 },
+
+  { word:'PARAMOUNT',
+    clues:{
+      definition:'More important than anything else; of the greatest possible significance or rank...',
+      sentence:'In surgery, the safety of the patient is ___ — every other concern is secondary.',
+      emoji:'👑⬆️⭐'},
+    options:['most important of all','least significant','somewhat relevant','completely unrelated'], correct:0 },
+
+  { word:'RESILIENT',
+    clues:{
+      definition:'Able to withstand or recover quickly from difficult conditions or adversity...',
+      sentence:'The ___ community rebuilt their entire town within months of the devastating flood.',
+      emoji:'🌱💪🔄'},
+    options:['able to recover quickly','easily broken down','slow to accept change','stubbornly inflexible'], correct:0 },
+
+  { word:'TUMULTUOUS',
+    clues:{
+      definition:'Making an uproar; very loud, disorderly, or turbulent; full of confusion and noise...',
+      sentence:'The ___ crowd outside the stadium made it impossible to hold any conversation.',
+      emoji:'🌊🌪️📣'},
+    options:['loud and chaotic','quiet and orderly','slow and steady','warm and celebratory'], correct:0 },
+
+  { word:'VENERATE',
+    clues:{
+      definition:'To regard with great respect, reverence, and deep admiration; to hold as sacred...',
+      sentence:'The villagers continued to ___ the old traditions, treating each one as sacred.',
+      emoji:'🙏👴✨'},
+    options:['deeply respect and honor','openly mock','casually ignore','secretly fear'], correct:0 },
+
+  { word:'CANDID',
+    clues:{
+      definition:'Truthful and straightforward; not hiding one\'s thoughts or feelings from others...',
+      sentence:'The coach was ___ about the team\'s weaknesses — sugarcoating the loss would help no one.',
+      emoji:'💬😐✔️'},
+    options:['honest and direct','secretive and evasive','politely vague','overly dramatic'], correct:0 },
+
+  { word:'ENIGMATIC',
+    clues:{
+      definition:'Difficult to understand or interpret; mysterious, puzzling, and hard to read...',
+      sentence:'Her ___ smile made it impossible to tell whether she was pleased or deeply disappointed.',
+      emoji:'🎭❓🌙'},
+    options:['mysterious and puzzling','clear and obvious','loud and expressive','simple and predictable'], correct:0 }
+]
+};
+
+// ─────────────────────────────────────────────────────────────
+//  STATE
+// ─────────────────────────────────────────────────────────────
+const G = {
+  grade: null,
+  deck: [],
+  idx: 0,
+  score: 0,
+  cluesUsed: [],    // number of clues opened per case
+  answered: [],     // bool per case
+  wasCorrect: [],   // bool per case
+  shuffledCorrect: [] // correct index after shuffling options
+};
+
+// ─────────────────────────────────────────────────────────────
+//  HELPERS
+// ─────────────────────────────────────────────────────────────
+function nav(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function esc(s) {
+  return String(s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// Fisher-Yates — mutates in place, returns array
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+// ─────────────────────────────────────────────────────────────
+//  START
+// ─────────────────────────────────────────────────────────────
+function startGame(grade) {
+  G.grade = grade;
+  G.deck = shuffle([...WORDS[grade]]).slice(0, 6);
+  G.idx = 0;
+  G.score = 0;
+  G.cluesUsed     = new Array(6).fill(0);
+  G.answered      = new Array(6).fill(false);
+  G.wasCorrect    = new Array(6).fill(false);
+  G.shuffledCorrect = new Array(6).fill(0);
+  buildDots();
+  renderCase();
+  nav('s-game');
+}
+
+// ─────────────────────────────────────────────────────────────
+//  PROGRESS DOTS
+// ─────────────────────────────────────────────────────────────
+function buildDots() {
+  const row = document.getElementById('dots');
+  row.innerHTML = '';
+  for (let i = 0; i < 6; i++) {
+    const d = document.createElement('div');
+    d.id = 'dot' + i;
+    d.className = 'dot' + (i === 0 ? ' active' : '');
+    row.appendChild(d);
+  }
+}
+
+function refreshDots() {
+  for (let i = 0; i < 6; i++) {
+    const d = document.getElementById('dot' + i);
+    if (!d) continue;
+    d.className = 'dot' + (i < G.idx ? ' done' : i === G.idx ? ' active' : '');
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
+//  RENDER CASE
+// ─────────────────────────────────────────────────────────────
+function renderCase() {
+  const w = G.deck[G.idx];
+  const n = G.idx + 1;
+
+  document.getElementById('case-lbl').textContent = `CASE ${n} OF 6`;
+  document.getElementById('score-lbl').textContent = `${G.score} PTS`;
+  document.getElementById('cf-id').textContent = `CASE-00${n}`;
+  document.getElementById('mystery-word').textContent = w.word;
+  refreshDots();
+
+  // Shuffle options, track new correct index
+  const opts = [...w.options];
+  const correctText = opts[w.correct];
+  shuffle(opts);
+  G.shuffledCorrect[G.idx] = opts.indexOf(correctText);
+
+  // ── Clue cards ──
+  const cr = document.getElementById('clues-row');
+  cr.innerHTML = '';
+  [
+    { key: 'definition', icon: '📖', label: 'DEFINITION' },
+    { key: 'sentence',   icon: '📝', label: 'SENTENCE'   },
+    { key: 'emoji',      icon: '🖼️',  label: 'EMOJI CUES' }
+  ].forEach((ct, i) => {
+    const card = document.createElement('div');
+    card.className = 'clue-card';
+    card.id = 'clue' + i;
+    const isEmoji = ct.key === 'emoji';
+    card.innerHTML =
+      `<div class="cc-front">
+        <span class="cc-lock">🔒</span>
+        <div class="cc-type">${ct.label}</div>
+      </div>
+      <div class="cc-back">
+        <span class="cc-ico">${ct.icon}</span>
+        ${isEmoji
+          ? `<span class="cc-emoji">${w.clues.emoji}</span>`
+          : `<div class="cc-text">${esc(w.clues[ct.key])}</div>`
+        }
+      </div>`;
+    card.addEventListener('click', () => revealClue(i, card));
+    cr.appendChild(card);
+  });
+
+  // ── Answer buttons ──
+  const ag = document.getElementById('answers-grid');
+  ag.innerHTML = '';
+  ['A','B','C','D'].forEach((letter, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'ans-btn';
+    btn.innerHTML = `<span class="ans-letter">${letter}</span>${esc(opts[i])}`;
+    btn.addEventListener('click', () => pick(i, btn, w));
+    ag.appendChild(btn);
+  });
+}
+
+// ─────────────────────────────────────────────────────────────
+//  REVEAL CLUE
+// ─────────────────────────────────────────────────────────────
+function revealClue(i, card) {
+  if (card.classList.contains('opened')) return;
+  if (G.answered[G.idx]) return;
+  card.classList.add('opened');
+  G.cluesUsed[G.idx]++;
+}
+
+// ─────────────────────────────────────────────────────────────
+//  PICK ANSWER
+// ─────────────────────────────────────────────────────────────
+function pick(i, btn, w) {
+  if (G.answered[G.idx]) return;
+  G.answered[G.idx] = true;
+
+  const correctIdx = G.shuffledCorrect[G.idx];
+  const isCorrect  = i === correctIdx;
+  const clues      = G.cluesUsed[G.idx];
+  const pts        = isCorrect ? Math.max(0, 300 - clues * 75) : 0;
+
+  if (isCorrect) { G.score += pts; G.wasCorrect[G.idx] = true; }
+
+  // Style all buttons
+  document.querySelectorAll('.ans-btn').forEach((b, j) => {
+    b.disabled = true;
+    if (j === correctIdx)          b.classList.add('correct');
+    else if (j === i && !isCorrect) b.classList.add('wrong');
+  });
+
+  document.getElementById('score-lbl').textContent = `${G.score} PTS`;
+
+  setTimeout(() => showResult(isCorrect, pts, clues, w), 650);
+}
+
+// ─────────────────────────────────────────────────────────────
+//  RESULT OVERLAY
+// ─────────────────────────────────────────────────────────────
+function showResult(isCorrect, pts, clues, w) {
+  const isLast = G.idx === 5;
+
+  document.getElementById('r-stamp').textContent =
+    isCorrect ? (pts === 300 ? '✦ CRACKED IT ✦' : 'CASE SOLVED') : 'CASE CLOSED';
+  document.getElementById('r-stamp').className = 'r-stamp ' + (isCorrect ? 'ok' : 'fail');
+
+  document.getElementById('r-word').textContent = w.word;
+  document.getElementById('r-def').textContent  = `"${w.options[w.correct]}"`;
+
+  document.getElementById('r-pts').textContent  = isCorrect ? `+${pts} PTS` : '0 PTS';
+  document.getElementById('r-pts').className    = 'r-pts ' + (isCorrect ? 'ok' : 'fail');
+
+  document.getElementById('r-clues').textContent =
+    clues === 0 ? 'No clues used' : `${clues} clue${clues > 1 ? 's' : ''} used`;
+
+  document.getElementById('r-next').textContent = isLast ? 'VIEW REPORT →' : 'NEXT CASE →';
+
+  document.getElementById('overlay').classList.add('show');
+}
+
+function advance() {
+  document.getElementById('overlay').classList.remove('show');
+  if (G.idx === 5) {
+    setTimeout(showSummary, 320);
+  } else {
+    G.idx++;
+    setTimeout(renderCase, 320);
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
+//  SUMMARY
+// ─────────────────────────────────────────────────────────────
+function showSummary() {
+  const s = G.score;
+  const [icon, rank] =
+    s >= 1500 ? ['🏆', 'MASTER DETECTIVE'] :
+    s >= 1100 ? ['🕵️', 'SENIOR DETECTIVE'] :
+    s >=  700 ? ['🔍', 'DETECTIVE']         :
+                ['📋', 'ROOKIE'];
+
+  document.getElementById('sum-icon').textContent  = icon;
+  document.getElementById('sum-rank').textContent  = rank;
+  document.getElementById('sum-score').textContent = `${s} / 1800 points`;
+
+  const log = document.getElementById('case-log');
+  log.innerHTML = '';
+  G.deck.forEach((w, i) => {
+    const ok  = G.wasCorrect[i];
+    const cl  = G.cluesUsed[i];
+    const pts = ok ? Math.max(0, 300 - cl * 75) : 0;
+    const row = document.createElement('div');
+    row.className = 'log-row';
+    row.innerHTML =
+      `<div class="log-word">${esc(w.word)}</div>
+       <div class="log-clues">${cl === 0 ? 'no clues' : `${cl} clue${cl > 1 ? 's' : ''}`}</div>
+       <div class="log-pts ${ok ? 'ok' : 'fail'}">${ok ? '+' + pts : '0'} pts</div>
+       <div class="log-ico">${ok ? '✅' : '❌'}</div>`;
+    log.appendChild(row);
+  });
+
+  nav('s-summary');
+}
+
+function playAgain() { startGame(G.grade); }
+</script>
+</body>
+</html>
